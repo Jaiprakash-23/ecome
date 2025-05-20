@@ -4,6 +4,7 @@ import 'package:ecome/Dashbord.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpScreen extends StatefulWidget {
   @override
@@ -38,6 +39,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
         if (jsonResponse['status'] == true) {
           print("OTP Verified: $responseData");
+         final String token = jsonResponse['token'] ?? '';
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("token", token);
+        print("namedata $token");
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => Dashboard()),
@@ -69,6 +74,8 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
+  
+  
   void _handleOtpChange(String value, int index) {
     if (value.isNotEmpty) {
       if (index < _controllers.length - 1) {

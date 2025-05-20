@@ -45,6 +45,12 @@ dependencies:
   http: ^1.3.0
   awesome_dialog: ^3.2.1
   shared_preferences:
+  # geolocator: ^10.1.0
+  # permission_handler: ^11.0.1
+  # geocoding: ^2.0.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  
 
 dev_dependencies:
   flutter_test:

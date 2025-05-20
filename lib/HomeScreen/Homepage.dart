@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:ecome/Bassurl.dart';
 import 'package:ecome/Categories/Categories.dart';
+import 'package:ecome/Categories/CategoriesPage.dart';
+import 'package:ecome/HomeScreen/ProductDetailScreen.dart';
 import 'package:ecome/MyRoutes/myPagesName.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -13,101 +17,125 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 class ShopPage extends StatefulWidget {
+  // final Function(int) onNavigateToTab;
+  // const ShopPage({Key? key, required this.onNavigateToTab}) : super(key: key);
   @override
   State<ShopPage> createState() => _ShopPageState();
 }
 
 class _ShopPageState extends State<ShopPage> {
- List products = [];
+  List products = [];
   bool isLoading = true;
+  String token = '';
 
- 
-
-  Future<void> fetchProducts() async {
-   var headers = {
-  'Authorization': 'Bearer 14|L3zoPZzZeEBH3tEbuxleoiQ9XPSjUeagLqiUAQaS410fd581'
-};
-var request = http.Request('GET', Uri.parse('https://ensantehealth.com/owngears/public/api/products'));
-
-request.headers.addAll(headers);
-
-http.StreamedResponse response = await request.send();
-
-if (response.statusCode == 200) {
-  //print(" products  ${await response.stream.bytesToString()}");
-  String responseData = await response.stream.bytesToString();
-      products = jsonDecode(responseData)['data'];
-      print("products $products");
-}
-else {
-  print(response.reasonPhrase);
-}
-
+  Future<void> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = (prefs.getString("token") ?? '').trim();
+      fetchCategories(token);
+      fetchProducts(token);
+      fetchpopularproducts(token);
+      fetchjustforyou(token);
+    });
+    print('Cleaned datatoken: $token');
   }
+
+  Future<void> fetchProducts(String token) async {
+    try {
+      var headers = {'Authorization': 'Bearer $token'};
+      print("producteds $token");
+
+      var request = http.Request('GET', Uri.parse('$BasseUrl/api/products'));
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String responseData = await response.stream.bytesToString();
+        products = jsonDecode(responseData)['data'];
+        print("products $products");
+      } else {
+        print("Error fetching products: ${response.reasonPhrase}");
+      }
+    } catch (e) {
+      print('An error occurred while fetching products: $e');
+    }
+  }
+
+  List categories = [];
+  Future<void> fetchCategories(String token) async {
+    try {
+      var headers = {'Authorization': 'Bearer $token'};
+      print("gettokendate $token");
+      var request = http.Request('GET', Uri.parse('$BasseUrl/api/categories'));
+
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String responseData = await response.stream.bytesToString();
+        categories = jsonDecode(responseData)['data'];
+        print("categories $categories");
+      } else {
+        print('Error: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  List popularproducts = [];
+  Future<void> fetchpopularproducts(String token) async {
+    try {
+      var headers = {'Authorization': 'Bearer $token'};
+      print("gettokendate $token");
+      var request =
+          http.Request('GET', Uri.parse('$BasseUrl/api/popular-products'));
+
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String responseData = await response.stream.bytesToString();
+        popularproducts = jsonDecode(responseData)['data'];
+        print("categories $popularproducts");
+      } else {
+        print('Error: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  List justforyou = [];
+  Future<void> fetchjustforyou(String token) async {
+    try {
+      var headers = {'Authorization': 'Bearer $token'};
+      print("gettokendate $token");
+      var request =
+          http.Request('GET', Uri.parse('$BasseUrl/api/just-for-you'));
+
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String responseData = await response.stream.bytesToString();
+        justforyou = jsonDecode(responseData)['data'];
+        print("justforyou $justforyou");
+      } else {
+        print('Error: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
   int _currentIndex = 0;
   final List<int> _bannerItems = [1, 2, 3, 4];
-  final List<Map<String, dynamic>> categories = [
-    {
-      "title": "Clothing",
-      "count": 109,
-      "images": [
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/bra/n/o/k/lightly-padded-38d-1-multiway-yes-regular-7281133-dressberry-original-imah7cu2vfpbyhqe.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/a/m/m/xl-1012-janmantar-original-imah3np3npsxwcpz.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/h/s/g/xxl-1003-janmantar-original-imah76bgh2mxvucz.jpeg?q=70"
-      ]
-    },
-    {
-      "title": "Shoes",
-      "count": 530,
-      "images": [
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/o/3/r/3xl-1075-ameerah-original-imah6g4z95yhc5hm.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/m/c/m/3xl-1073-ameerah-original-imah2pg4pkqh5gyz.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/i/z/m/xl-womens-long-polo-good-thing-olv-pajama-gry-yy-clothing-original-imahfqxy8ydpkzeg.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/h/y/u/free-1100-lrt-original-imagn25u5dsrewtw.jpeg?q=70"
-      ]
-    },
-    {
-      "title": "Bags",
-      "count": 87,
-      "images": [
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/p/a/y/xl-pl-fur-nightsuit-peach-pollo-loco-original-imah6ba4ggcxmy3g.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/9/w/l/l-ss-nty40-cotnwhitefloral-swastik-stuffs-original-imah96wpaweb3dng.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/q/q/v/m-nc-gb00a-nivcy-original-imah5gchb47zgdwn.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/kst9gnk0/night-dress-nighty/v/x/v/s-nc-b005-nivcy-original-imag6at759cknghb.jpeg?q=70"
-      ]
-    },
-    {
-      "title": "Lingerie",
-      "count": 218,
-      "images": [
-        "https://rukminim2.flixcart.com/image/612/612/ksw4ccw0/night-dress-nighty/p/m/g/xxl-nc-e001-nivcy-original-imag6cr84y79ght7.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/pyjama/e/y/s/5xl-7000-pink-cupid-original-imah8nnymzygncuz.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/g/w/0/3xl-db-5001-star-dreambe-original-imah97m5hhghsrge.jpeg?q=70",
-        "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/e/v/r/xl-299-zw23p-cpt-rgn-zebu-original-imagp3swd6ybzhqk.jpeg?q=70"
-      ]
-    },
-  ];
-  final List<Map<String, String>> items = [
-    {
-      'image':
-          'https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/y/f/x/xl-ns-110-plush-original-imagsgqtaezbdyzq.jpeg?q=70',
-      'title': 'Lorem ipsum dolor sit amet consectetur.',
-      'price': '\$17.00'
-    },
-    {
-      'image':
-          'https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/4/e/b/s-nightsuit-dreambe-original-imah52exz4fgm3hr.jpeg?q=70',
-      'title': 'Lorem ipsum dolor sit amet consectetur.',
-      'price': '\$32.00'
-    },
-    {
-      'image':
-          'https://rukminim2.flixcart.com/image/612/612/xif0q/apparel-set/c/2/v/l-kevzo-co-ordset-c-olivegreen-co-ords-kevzo-original-imah3yh6mza4n7yb.jpeg?q=70',
-      'title': 'Lorem ipsum dolor sit amet consectetur.',
-      'price': '\$21.00'
-    },
-  ];
+
   final List<dynamic> topitems = [
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/y/g/l/xl-ltpj-urbe-original-imagxm79jjfvssxd.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/s/k/e/xs-dn-01-night-suits-for-ladies-night-suits-for-ladies-sexy-original-imaghecjhsgdj6hm.jpeg?q=70",
@@ -118,26 +146,15 @@ else {
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/t/e/q/l-ns-109-plush-original-imagq42ygvg3zzxz.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/f/c/x/free-10147-49-trundz-original-imagpcg55pfxhdbg.jpeg?q=70"
   ];
-   final List<dynamic> Flashitems = [
+  final List<dynamic> Flashitems = [
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/a/m/m/xl-1012-janmantar-original-imah3np3npsxwcpz.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/p/8/b/free-veer3785-mahaarani-original-imah2qc93veme7nj.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/y/9/m/xxl-pra-wo-collar-pradhruhe-original-imah9u5ddghz8gye.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/d/t/r/free-001-kripto-katrox-original-imah9uacy6rmpcxz.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/z/n/w/3xl-1075-ameerah-original-imah6g4zz5a7er36.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/c/6/o/3xl-1073-ameerah-original-imah2pg4zsyfwzgv.jpeg?q=70"
-   ];
-   final List<dynamic>mostList=[
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/f/o/6/free-fk-mix-kf-r-05-capasino-original-imah2dfn8mnsffv6.jpeg?q=70",
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/track-suit/9/k/2/xl-5dz-jogging-dress-ladies-jogging-suit-for-women-summer-night-original-imah5qj8umjutrbp.jpeg?q=70",
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/k/p/p/s-nd-yellowzig-bachuu-original-imagtbhvjce8grqc.jpeg?q=70"
-   ];
-   final List<dynamic>justList=[
+  ];
 
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/r/c/j/m-db-t001-dreambe-original-imahyhe9vtkgwzpe.jpeg?q=70",
-    "https://rukminim2.flixcart.com/image/612/612/kvcpn680/night-dress-nighty/f/i/o/m-pcw00001409-piyali-s-creation-women-s-original-imag8ay73zazazja.jpeg?q=70",
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/k/0/0/m-nd-winestrip-bachuu-original-imahfpq9dmahbprb.jpeg?q=70",
-    "https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/w/g/r/free-11051-11054-trundz-original-imahyyr4zmxgkwyb.jpeg?q=70"
-   ];
   int hours = 0, minutes = 36, seconds = 58;
   late Timer _timer;
 
@@ -150,10 +167,12 @@ else {
 
   @override
   void initState() {
+    getToken();
+
     super.initState();
-    fetchProducts();
+
     _startTimer();
-   
+
     // Initialize video controller with a network video URL
     _controller = VideoPlayerController.network(
       'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
@@ -164,7 +183,7 @@ else {
       })
       ..setLooping(true);
 
-       _initializeControllers();
+    _initializeControllers();
   }
 
   // @override
@@ -182,7 +201,6 @@ else {
       }
     });
   }
-
 
   void _startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -210,8 +228,8 @@ else {
   @override
   void dispose() {
     _timer.cancel();
-     _controller.dispose();
-      for (var controller in _controllers) {
+    _controller.dispose();
+    for (var controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
@@ -228,7 +246,7 @@ else {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 16,
+      length: categories.length,
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(80), // Custom height
@@ -237,7 +255,11 @@ else {
             child: SafeArea(
               child: Row(
                 children: [
-                Image.asset('assets/images/logoapp.png',height: 27,width: 50,),
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 27,
+                    width: 50,
+                  ),
                   // Text(
                   //   "Shop",
                   //   style: TextStyle(
@@ -275,47 +297,75 @@ else {
           ),
         ),
 
-       
-       
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             //mainAxisAlignment: MainAxisAlignment.start,
             children: [
               TabBar(
-                
-               automaticIndicatorColorAdjustment: true,
-                labelPadding: EdgeInsets.only(left: 35), 
+                automaticIndicatorColorAdjustment: true,
+                labelPadding: EdgeInsets.only(left: 35),
                 isScrollable: true,
                 dividerColor: Colors.transparent,
-                  tabAlignment: TabAlignment.center,
-                  overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-    if (states.contains(MaterialState.pressed) || states.contains(MaterialState.hovered)) {
-      return Colors.transparent; // Set overlay color to red when pressed or hovered
-    }
-    return null; // Default behavior
-  }),
+                tabAlignment: TabAlignment.center,
+                overlayColor:
+                    MaterialStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(MaterialState.pressed) ||
+                      states.contains(MaterialState.hovered)) {
+                    return Colors
+                        .transparent; // Set overlay color to red when pressed or hovered
+                  }
+                  return null; // Default behavior
+                }),
                 tabs: [
-                  Tab(icon: Icon(Icons.shopping_bag), text: "All"),
-                  Tab(icon: Icon(Icons.wb_sunny), text: "Summer"),
-                  Tab(icon: Icon(Icons.headset), text: "Electronics"),
-                  Tab(icon: Icon(Icons.brush), text: "Beauty"),
-                  Tab(icon: Icon(Icons.child_friendly), text: "Kids"),
-                   Tab(icon: Icon(Icons.shopping_bag), text: "Fashion"),
-                  Tab(icon: Icon(Icons.home), text: "Home"),
-                  Tab(icon: Icon(Icons.tram_sharp), text: "Travel"),
-                  Tab(icon: Icon(Icons.gamepad_sharp), text: "Gadgets"),
-                  Tab(icon: Icon(Icons.adf_scanner_outlined), text: "Appliances"),
-                  Tab(icon: Icon(Icons.mobile_friendly_rounded), text: "Mobile"),
-                  Tab(icon: Icon(Icons.laptop), text: "Laptops"),
-                  Tab(icon: Icon(Icons.desktop_mac_outlined), text: "Desktops"),
-                   Tab(icon: Icon(Icons.breakfast_dining_rounded), text: "Beauty"),
-                  Tab(icon: Icon(Icons.width_full_rounded), text: "Furniture"),
-                  Tab(icon: Icon(Icons.sports_baseball), text: "Sports"),
+                  // Add a static "Home" tab
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CategoriesPage(
+                            onNavigateBack: () {
+                              Navigator.pop(context, 2); // Index to return to
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    child: Tab(
+                      icon: Icon(Icons.list_alt_rounded, size: 30,color: Colors.black,),
+                      text: 'All',
+                    ),
+                  ),
+                  // Add dynamic tabs for categories
+                  ...categories.map((category) {
+                    return GestureDetector(
+                      onTap: () {
+                        int productid = category['id'];
+                        String categoryName = category['name'];
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Categories(
+                              productId: productid,
+                              categoryName: categoryName,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Tab(
+                        icon: CachedNetworkImage(
+                          imageUrl: '$imageUrl${category['icon']}',
+                          width: 30,
+                          height: 30,
+                        ),
+                        text: category['name'],
+                      ),
+                    );
+                  }).toList(),
                 ],
               ),
-             
-             
+
               // SizedBox(
               //   height: 3,
               //   child: TabBarView(
@@ -323,6 +373,94 @@ else {
               //   ),
               // ),
               _buildBannerSlider(),
+              SizedBox(
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xff6F95F3)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/images/mobile.png'),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            'Mobile Repair',
+                            style: TextStyle(
+                                fontFamily: 'Roboto Flex', fontSize: 8),
+                          )
+                        ],
+                      )),
+                  Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xffFF6B9D)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/images/technician.png'),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            'Laptop Repair',
+                            style: TextStyle(
+                                fontFamily: 'Roboto Flex', fontSize: 8),
+                          )
+                        ],
+                      )),
+                  Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xff69F9CB)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/images/socialmedia.png'),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            'Exchange Products',
+                            style: TextStyle(
+                                fontFamily: 'Roboto Flex', fontSize: 8),
+                          )
+                        ],
+                      )),
+                  Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xffF1AEAE)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/images/success.png'),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            'Contests',
+                            style: TextStyle(
+                                fontFamily: 'Roboto Flex', fontSize: 8),
+                          )
+                        ],
+                      )),
+                ],
+              ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -361,10 +499,10 @@ else {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: SizedBox(
-                  height: 450, // Adjust based on your needs
+                  height: 470, // Adjust based on your needs
                   child: GridView.builder(
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: categories.length,
+                    itemCount: categories.length > 4 ? 4 : categories.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
@@ -372,40 +510,129 @@ else {
                       mainAxisExtent: 222,
                     ),
                     itemBuilder: (context, index) {
+                      String image = "$imageUrl${categories[index]['image']}";
+
                       return InkWell(
-                        onTap: (){
-                           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => Categories()),
-            );
-                          //Get.toNamed(MyPagesName.categories);
-                        },
-                        child: buildCategoryCard(categories[index]));
+                          onTap: () {
+                            int productid = categories[index]['id'];
+                            String categrayname = categories[index]['name'];
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => Categories(
+                                        productId: productid,
+                                        categoryName: categrayname,
+                                      )),
+                            );
+                            //Get.toNamed(MyPagesName.categories);
+                          },
+                          child:
+                              //buildCategoryCard(categories[index]));
+                              Container(
+                            //height: 700, // Fixed height for the container
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 5,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    color: Colors.white,
+                                    // height: 200, // Fixed height for the image grid
+                                    child: Container(
+                                        height: 157.42,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          // image: DecorationImage(
+                                          //   image: (image),
+                                          //   fit: BoxFit.cover,
+                                          // ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: CachedNetworkImage(
+                                            imageUrl: image,
+                                            fit: BoxFit.cover,
+                                            height: 157.42,
+                                          ),
+                                          // Image.network(
+                                          //   image,
+                                          //   fit: BoxFit.cover,
+                                          //   height: 157.42,
+                                          // )
+                                        )),
+                                  ),
+                                ),
+                                SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${categories[index]['name']}',
+                                      style: TextStyle(
+                                          fontFamily: "Roboto Flex",
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(height: 5),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue[100],
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        '${categories[index]['products_count']}',
+                                        style: TextStyle(
+                                            fontFamily: "Roboto Flex",
+                                            fontSize: 12,
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          ));
                     },
                   ),
                 ),
               ),
+
               Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              "ARTICALE REIMAGINED",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                color: Colors.black,
-                fontFamily: 'Roboto Flex'
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "ARTICALE REIMAGINED",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                          color: Colors.black,
+                          fontFamily: 'Roboto Flex'),
+                      textAlign: TextAlign.center,
+                    ),
+                    //const SizedBox(height: 20),
+                    _buildVideoCard(_controller),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            //const SizedBox(height: 20),
-            _buildVideoCard(_controller),
-          ],
-        ),
-      ),
               _buildProductSection('Top Products', 8),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -452,65 +679,79 @@ else {
                   scrollDirection: Axis.horizontal,
                   itemCount: products.length,
                   itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Container(
-                        width: 180,
-                        decoration: BoxDecoration(
-                          // color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Colors.black12,
-                          //     blurRadius: 4,
-                          //     spreadRadius: 2,
-                          //   ),
-                          // ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                color: Colors.white,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    "${products[index]['images']}",
-                                    height: 120,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                    return GestureDetector(
+                      onTap: () {
+                        int? productId = products[index]['id'];
+                        if (productId != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailScreen(productId: productId),
+                            ),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Container(
+                          width: 180,
+                          decoration: BoxDecoration(
+                            // color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: Colors.black12,
+                            //     blurRadius: 4,
+                            //     spreadRadius: 2,
+                            //   ),
+                            // ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: Colors.white,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      "${products[index]['images'][0]}",
+                                      height: 134.63,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                "${products[index]['name']}",
-                                style: TextStyle(
-                                    fontSize: 14, fontFamily: "Roboto Flex"),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Text(
-                                "${products[index]['price']}",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontFamily: "Roboto Flex",
-                                  fontWeight: FontWeight.bold,
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  "${products[index]['title']}",
+                                  style: TextStyle(
+                                      fontSize: 14, fontFamily: "Roboto Flex"),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ),
-                          ],
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Text(
+                                  "₹ ${products[index]['price']}",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "Roboto Flex",
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -607,8 +848,7 @@ else {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: 
-                Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Most Popular',
@@ -640,8 +880,7 @@ else {
                     )
                   ],
                 ),
-            
-             ),
+              ),
               Container(
                 height: 200,
                 //width: 200,
@@ -650,83 +889,99 @@ else {
                 ),
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: mostList.length,
+                  itemCount: popularproducts.length,
+                  //mostList.length,
                   itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Container(
-                        width: 150,
-                        decoration: BoxDecoration(
-                          //color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Colors.black12,
-                          //     blurRadius: 4,
-                          //     spreadRadius: 2,
-                          //   ),
-                          // ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                color: Colors.white,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    mostList[index],
-                                    height: 120,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                    return GestureDetector(
+                      onTap: () {
+                        int? productId = popularproducts[index]['id'];
+                        if (productId != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailScreen(productId: productId),
+                            ),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Container(
+                          width: 150,
+                          decoration: BoxDecoration(
+                            //color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: Colors.black12,
+                            //     blurRadius: 4,
+                            //     spreadRadius: 2,
+                            //   ),
+                            // ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: Colors.white,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      '$imageUrl/products/${popularproducts[index]['images'][0] ?? ''}',
+                                      height: 120,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '1780',
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '₹${popularproducts[index]['price'] ?? ''} ',
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: "Roboto Flex"),
+                                        ),
+                                        Icon(
+                                          Icons.favorite_outlined,
+                                          color: Colors.blue,
+                                          size: 15,
+                                        )
+                                      ],
+                                    ),
+                                    Text(
+                                        '${popularproducts[index]['brand'] ?? ''}',
                                         style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: "Roboto Flex"),
-                                      ),
-                                      Icon(
-                                        Icons.favorite_outlined,
-                                        color: Colors.blue,
-                                        size: 15,
-                                      )
-                                    ],
-                                  ),
-                                  Text('Sale',
-                                      style: TextStyle(
-                                          fontSize: 15, fontFamily: "Roboto Flex"))
-                                ],
+                                            fontSize: 15,
+                                            fontFamily: "Roboto Flex"))
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
               ),
-            
-            
-               _buildBannerSliders(),
-               Padding(
+
+              _buildBannerSliders(),
+              Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -736,23 +991,17 @@ else {
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
                             fontFamily: "Roboto Flex")),
-                   
                   ],
                 ),
               ),
-             
+
               _buildFlashSaleSection(),
-              SizedBox(height: 20,)
+              SizedBox(
+                height: 20,
+              )
             ],
           ),
         ),
-      
-      
-      
-      
-      
-      
-      
 
         //bottomNavigationBar: _buildBottomNavBar(),
       ),
@@ -777,8 +1026,8 @@ else {
                   bottom: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 4, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     decoration: BoxDecoration(
                       color: Color(0xff707070),
                       borderRadius: BorderRadius.circular(8),
@@ -805,7 +1054,8 @@ else {
           : const Center(child: CircularProgressIndicator()),
     );
   }
-   final List<VideoPlayerController> _controllers = [];
+
+  final List<VideoPlayerController> _controllers = [];
   final List<String> _videoUrls = [
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
@@ -860,7 +1110,7 @@ else {
     });
   }
 
- Widget _builddVideoCard(int index) {
+  Widget _builddVideoCard(int index) {
     final controller = _controllers[index];
     return SizedBox(
       width: 104,
@@ -875,7 +1125,8 @@ else {
                     child: VideoPlayer(controller),
                   ),
                 ),
-                if (!controller.value.isPlaying || _currentlyPlayingIndex != index)
+                if (!controller.value.isPlaying ||
+                    _currentlyPlayingIndex != index)
                   Center(
                     child: GestureDetector(
                       onTap: () => _toggleePlayPause(index),
@@ -891,7 +1142,6 @@ else {
           : const Center(child: CircularProgressIndicator()),
     );
   }
-
 
   Widget _buildBannerSliders() {
     return Column(
@@ -947,8 +1197,7 @@ else {
       ],
     );
   }
-  
-  
+
   Widget _buildBannerSlider() {
     return Column(
       children: [
@@ -975,7 +1224,7 @@ else {
                     borderRadius: BorderRadius.circular(10),
                     color: Colors.white,
                     image: DecorationImage(
-                      image: AssetImage('asset/baner.png'),
+                      image: AssetImage('assets/images/slider1.png'),
                       fit: BoxFit.cover, // Ensure image covers full area
                     ),
                   ),
@@ -1004,10 +1253,6 @@ else {
     );
   }
 
- 
- 
- 
- 
   Widget buildCategoryCard(Map<String, dynamic> category) {
     return Container(
       //height: 700, // Fixed height for the container
@@ -1027,31 +1272,40 @@ else {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            // height: 200, // Fixed height for the image grid
-            child: GridView.builder(
-              shrinkWrap: true, // Ensures GridView doesn't take extra space
-              physics:
-                  NeverScrollableScrollPhysics(), // Prevents scrolling inside
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 5,
-                mainAxisSpacing: 5,
-                childAspectRatio: 1, // Ensures square images
-              ),
-              itemCount: category["images"].length,
-              itemBuilder: (context, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    category["images"][index],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                );
-              },
+              // height: 200, // Fixed height for the image grid
+              child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/o/3/r/3xl-1075-ameerah-original-imah6g4z95yhc5hm.jpeg?q=70",
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
+          )
+              // GridView.builder(
+              //   shrinkWrap: true, // Ensures GridView doesn't take extra space
+              //   physics:
+              //       NeverScrollableScrollPhysics(), // Prevents scrolling inside
+              //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              //     crossAxisCount: 2,
+              //     crossAxisSpacing: 5,
+              //     mainAxisSpacing: 5,
+              //     childAspectRatio: 1, // Ensures square images
+              //   ),
+              //   itemCount: category["images"].length,
+              //   itemBuilder: (context, index) {
+              //     return ClipRRect(
+              //       borderRadius: BorderRadius.circular(10),
+              //       child: Image.network(
+              //         category["images"][index],
+              //         fit: BoxFit.cover,
+              //         width: double.infinity,
+              //         height: double.infinity,
+              //       ),
+              //     );
+              //   },
+              // ),
+              ),
           SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1073,7 +1327,9 @@ else {
                 child: Text(
                   category["count"].toString(),
                   style: TextStyle(
-                      fontFamily: "Roboto Flex", fontSize: 12, color: Colors.black),
+                      fontFamily: "Roboto Flex",
+                      fontSize: 12,
+                      color: Colors.black),
                 ),
               ),
             ],
@@ -1083,9 +1339,6 @@ else {
     );
   }
 
-  
-  
-  
   Widget _buildProductSection(String title, int count) {
     return Padding(
       padding: EdgeInsets.all(8.0),
@@ -1112,7 +1365,7 @@ else {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white,width: 5),
+                      border: Border.all(color: Colors.white, width: 5),
                       borderRadius: BorderRadius.circular(100),
                       color: Colors.red,
                       image: DecorationImage(
@@ -1128,8 +1381,6 @@ else {
     );
   }
 
- 
- 
   Widget _buildFlashSaleSection() {
     return Padding(
       padding: EdgeInsets.all(8.0),
@@ -1137,17 +1388,19 @@ else {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(_controllers.length, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: _builddVideoCard(index),
-                  );
-                }),
-              ),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(_controllers.length, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: _builddVideoCard(index),
+                );
+              }),
             ),
-            SizedBox(height: 10,),
+          ),
+          SizedBox(
+            height: 10,
+          ),
           Row(
             children: [
               Text('Just For You  ',
@@ -1173,63 +1426,74 @@ else {
               crossAxisCount: 2,
               childAspectRatio: 0.7,
             ),
-            itemCount: justList.length,
+            itemCount: justforyou.length,
             itemBuilder: (context, index) {
-              return Container(
-                margin: EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white),
-                        //color: Colors.amber,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                image: DecorationImage(
-                                    image: NetworkImage(
-                                      "${justList[index]}",
-                                    ),
-                                    fit: BoxFit.cover)),
-                            // child: Image.network('https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/o/9/6/5xl-c751-white-dennis-lingo-original-imahfgzs7p6abu8v.jpeg?q=70', height: 120, width: double.infinity, fit: BoxFit.cover)
+              return GestureDetector(
+                 onTap: () {
+                        int? productId = justforyou[index]['id'];
+                        if (productId != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailScreen(productId: productId),
+                            ),
+                          );
+                        }
+                      },
+                child: Container(
+                  margin: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white),
+                          //color: Colors.amber,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  image: DecorationImage(
+                                      image: NetworkImage(
+                                        "$imageUrl/products/${justforyou[index]['images'][0] ?? ''}",
+                                      ),
+                                      fit: BoxFit.cover)),
+                              // child: Image.network('https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/o/9/6/5xl-c751-white-dennis-lingo-original-imahfgzs7p6abu8v.jpeg?q=70', height: 120, width: double.infinity, fit: BoxFit.cover)
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Flash Sale Item',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "Roboto Flex")),
-                          Text('\$${(index + 1) * 15}',
-                              style: TextStyle(
-                                  color: Colors.black, fontFamily: "Roboto Flex")),
-                        ],
+                      Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${justforyou[index]['title'] ?? ''}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: "Roboto Flex")),
+                            Text('₹ ${justforyou[index]['price'] ?? ''}',
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontFamily: "Roboto Flex")),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
           ),
-      
-      
-      
         ],
       ),
     );
   }
 }
-

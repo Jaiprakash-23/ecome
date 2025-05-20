@@ -22,6 +22,7 @@ void main() async {
 
 class MyApp extends StatefulWidget {
   final String initialRoute;
+  
 
   const MyApp({required this.initialRoute, super.key});
 
@@ -30,6 +31,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(

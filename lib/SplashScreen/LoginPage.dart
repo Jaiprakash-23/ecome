@@ -101,7 +101,7 @@ Future<void> login() async {
             top: 0,
             left: -30,
             child: Image.asset(
-              'assets/images/mass.png',
+              'assets/images/bubble002.png',
               height: 360,
               fit: BoxFit.cover,
             ),
@@ -212,6 +212,7 @@ Future<void> login() async {
                 Center(
                   child: TextButton(
                     onPressed: () {
+                      // Get.toNamed(MyPagesName.loginPage);
                       // Add cancel logic here
                     },
                     child: const Text(

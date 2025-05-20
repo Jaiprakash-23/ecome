@@ -24,6 +24,10 @@ class MyPagesName{
  static const String privacyCenterPage='/privacyCenterPage';
  static const String myOrdersPage='/myOrdersPage';
  static const String orderDetailsPage='/orderDetailsPage';
+ static const String paymentOptionsPage='/paymentOptionsPage';
+ static const String cart='/cart';
+ static const String paymentOptionssPage='/paymentOptionssPage';
+
 
   
 }

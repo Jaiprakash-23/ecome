@@ -1,6 +1,5 @@
 import 'package:ecome/Categories/CartPage.dart';
 import 'package:ecome/Categories/CategoriesPage.dart';
-import 'package:ecome/Categories/OrderSummaryPage.dart';
 import 'package:ecome/Categories/Wishlist.dart';
 import 'package:ecome/HomeScreen/Homepage.dart';
 import 'package:ecome/Profile/UserProfilePage.dart';
@@ -17,18 +16,29 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   int _currentIndex = 0;
 
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    5,
-    (_) => GlobalKey<NavigatorState>(),
-  );
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
 
-  void _onTabTapped(int index) {
+  final List<Widget> _pages = [
+    ShopPage(),
+    WishlistPage(),
+    CategoriesPage(onNavigateBack: () {  },),
+    CartScreen(),
+    UserProfilePage(),
+  ];
+
+  void _onTap(int index) {
     if (_currentIndex != index) {
       setState(() {
         _currentIndex = index;
       });
     } else {
-      // Reset navigation stack if tapped again
+      // Reset stack of the current navigator
       _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
     }
   }
@@ -46,7 +56,7 @@ class _DashboardState extends State<Dashboard> {
       }
       return true; // Exit the app
     }
-    return false; // Don't exit the app
+    return false;
   }
 
   @override
@@ -54,88 +64,54 @@ class _DashboardState extends State<Dashboard> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            _buildNavigator(0, ShopPage()),
-            _buildNavigator(1, WishlistPage()),
-            _buildNavigator(2, CategoriesPage()),
-            _buildNavigator(3, CartScreen()),
-            _buildNavigator(4, UserProfilePage()),
-          ],
+        body: Stack(
+          children: _pages.asMap().entries.map((entry) {
+            int index = entry.key;
+            Widget page = entry.value;
+
+            return Offstage(
+              offstage: _currentIndex != index,
+              child: Navigator(
+                key: _navigatorKeys[index],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (_) => page,
+                  );
+                },
+              ),
+            );
+          }).toList(),
         ),
         bottomNavigationBar: BottomNavigationBar(
-  type: BottomNavigationBarType.fixed, // <-- add this line
-  selectedItemColor: Color(0xff004CFF),
-  unselectedItemColor: Colors.black,
-  currentIndex: _currentIndex,
-  onTap: _onTabTapped,
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.favorite_border),
-      label: 'Wishlist',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.list_alt_rounded),
-      label: 'Categories',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.shopping_bag_outlined),
-      label: 'Cart',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(LucideIcons.user),
-      label: 'Account',
-    ),
-  ],
-),
-
-        // bottomNavigationBar: BottomNavigationBar(
-        //   selectedItemColor: Colors.black,
-        //   unselectedItemColor: Colors.blue,
-        //   currentIndex: _currentIndex,
-        //   onTap: _onTabTapped,
-        //   items: const [
-        //     BottomNavigationBarItem(
-        //       icon: Icon(Icons.home_outlined),
-        //       label: 'Home',
-        //     ),
-        //     BottomNavigationBarItem(
-        //       icon: Icon(Icons.favorite_border),
-        //       label: 'Wishlist',
-        //     ),
-        //     BottomNavigationBarItem(
-        //       icon: Icon(Icons.filter),
-        //       label: 'Categories',
-        //     ),
-        //     BottomNavigationBarItem(
-        //       icon: Icon(Icons.shopping_bag_outlined),
-        //       label: 'Cart',
-        //     ),
-        //     BottomNavigationBarItem(
-        //       icon: Icon(LucideIcons.user),
-        //       label: 'Account',
-        //     ),
-        //   ],
-        // ),
-      
-      
+          currentIndex: _currentIndex,
+          onTap: _onTap,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Color(0xff004CFF),
+          unselectedItemColor: Colors.black,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_border),
+              label: 'Wishlist',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt_rounded),
+              label: 'Categories',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag_outlined),
+              label: 'Cart',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Account',
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  Widget _buildNavigator(int index, Widget child) {
-    return Navigator(
-      key: _navigatorKeys[index],
-      onGenerateRoute: (routeSettings) {
-        return MaterialPageRoute(builder: (_) => child);
-      },
-    );
-  }
 }
-
-
