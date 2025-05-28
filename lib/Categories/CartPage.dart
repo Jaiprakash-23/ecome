@@ -18,7 +18,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  List<dynamic> Cartdata = [];
+ 
   String token = '';
 
   @override
@@ -69,7 +69,8 @@ class _CartScreenState extends State<CartScreen> {
       print('Token not available.');
     }
   }
-
+ List<dynamic> Cartdata = [];
+  Map<dynamic,String>count={};
   Future<void> Cartgetdata(String token) async {
     if (token.isEmpty) {
       print("Token is empty");
@@ -84,8 +85,9 @@ class _CartScreenState extends State<CartScreen> {
       if (response.statusCode == 200) {
         setState(() {
           Cartdata = jsonDecode(response.body)['data'] ?? [];
+          count=jsonDecode(response.body);
         });
-        print('Cartdata $Cartdata');
+        print('Cartdata $count');
       } else {
         print("Error: ${response.statusCode} - ${response.reasonPhrase}");
       }
@@ -202,7 +204,7 @@ class _CartScreenState extends State<CartScreen> {
               radius: 14,
               backgroundColor: Colors.blue,
               child: Text(
-                '2',
+                '${count['count']?? 0}',
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ),
@@ -269,7 +271,8 @@ class _CartScreenState extends State<CartScreen> {
                                 await Cartgetdata(token); // Refresh cart data
                                 setState(
                                     () {}); // Update the UI with the latest data
-                              },
+                              }, date: 'Delivered by ${Cartdata[index]['delivery_date']}',
+                              discount:Cartdata[index]['delivery_date']==0?Cartdata[index]['discount_percent']: "  Free Delivery",f:Cartdata[index]['delivery_date']==0? Colors.red:Colors.green
                             );
                           },
                         ),
@@ -318,93 +321,109 @@ class _CartScreenState extends State<CartScreen> {
     required String size,
     required String color,
     required String quantity,
+    required String date,
+    required String discount,
+    required Color f,
     required VoidCallback onIncrease,
     required VoidCallback onDecrease,
     required VoidCallback onRemove,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
+          Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  imageUrl,
-                  height: 80,
-                  width: 80,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                bottom: 4,
-                left: 4,
-                child: GestureDetector(
-                  onTap: onRemove,
-                  child: Container(
-                    height: 24,
-                    width: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.delete,
-                      color: Color(0xffD97474),
-                      size: 16,
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      height: 80,
+                      width: 80,
+                      fit: BoxFit.cover,
                     ),
                   ),
+                  Positioned(
+                    bottom: 4,
+                    left: 4,
+                    child: GestureDetector(
+                      onTap: onRemove,
+                      child: Container(
+                        height: 24,
+                        width: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.delete,
+                          color: Color(0xffD97474),
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 12, fontFamily: 'Nunito Sans')),
+                    Text('$color, Size $size',
+                        style: const TextStyle(
+                            color: Color(0xff000000), fontFamily: 'Raleway')),
+                    Text('₹ $price',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontFamily: 'Raleway')),
+                  ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.only(top: 50),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline,
+                          color: Color(0xff004BFE)),
+                      onPressed: onDecrease,
+                    ),
+                    Container(
+                      height: 30,
+                      width: 37,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(9),
+                          color: const Color(0xffE5EBFC)),
+                      child: Center(
+                          child: Text(quantity.toString(),
+                              style: const TextStyle(fontSize: 16))),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline_sharp,
+                          color: Color(0xff004BFE)),
+                      onPressed: onIncrease,
+                    ),
+                  ],
+                ),
+              ),
+            
+            
             ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 12, fontFamily: 'Nunito Sans')),
-                Text('$color, Size $size',
-                    style: const TextStyle(
-                        color: Color(0xff000000), fontFamily: 'Raleway')),
-                Text('₹ $price',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        fontFamily: 'Raleway')),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 50),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline,
-                      color: Color(0xff004BFE)),
-                  onPressed: onDecrease,
-                ),
-                Container(
-                  height: 30,
-                  width: 37,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(9),
-                      color: const Color(0xffE5EBFC)),
-                  child: Center(
-                      child: Text(quantity.toString(),
-                          style: const TextStyle(fontSize: 16))),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline_sharp,
-                      color: Color(0xff004BFE)),
-                  onPressed: onIncrease,
-                ),
-              ],
-            ),
-          ),
+        Row(
+          children: [
+            Text(date),
+            Text(discount,style: TextStyle(color: f),),
+          ],
+        ),
         ],
       ),
     );

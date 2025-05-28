@@ -27,6 +27,10 @@ class MyPagesName{
  static const String paymentOptionsPage='/paymentOptionsPage';
  static const String cart='/cart';
  static const String paymentOptionssPage='/paymentOptionssPage';
+ static const String dashbordd='/dashbordd';
+ static const String selectIssuesPage='/selectIssuesPage';
+ static const String selectTechnicianPage='/selectTechnicianPage';
+ static const String repairRequestSummaryPage='/repairRequestSummaryPage';
 
 
   

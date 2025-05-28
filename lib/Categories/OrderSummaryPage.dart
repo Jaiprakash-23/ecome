@@ -328,6 +328,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                         "₹ ${dataOrderSummary[index]['price'] ?? ''}",
                                     details:
                                         "${dataOrderSummary[index]['size'][0] ?? ''} - ${dataOrderSummary[index]['color'] ?? ''}\nQty: ${dataOrderSummary[index]['quantity'] ?? ''}",
+                                        date: 'Delivered by ${dataOrderSummary[index]['delivered_by']}',
+                                     discount:dataOrderSummary[index]['delivery_charge'] ,f:dataOrderSummary[index]['delivery_charge']=="Free Delivery"?Colors.green:Colors.red
                                   ),
                                 );
                               },
@@ -583,7 +585,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                       
                                       leading: Icon(Icons.check_circle_outlined,
                                           color: Colors.green),
-                                      title: Text("${couponController.text}"),
+                                      title: Text("${couponController.text} applied"),
                                       subtitle: coupons[0]['discount_type'] ==
                                               'percentage'
                                           ? Text(
@@ -913,67 +915,82 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     required String price,
     String? originalPrice,
     required String details,
+    required String date,
+    required String discount,
+    required Color f,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-                border: Border.all(width: 5, color: Colors.white),
-                borderRadius: BorderRadius.circular(100),
-                image: DecorationImage(
-                    image: NetworkImage(imageUrl), fit: BoxFit.cover)),
-          ),
-          // ClipRRect(
-
-          //   borderRadius: BorderRadius.circular(100),
-          //   child:
-          //       Image.asset(imageUrl, width: 60, height: 60, fit: BoxFit.cover),
-          // ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'Nunito Sans',
-                        color: Color(0xff000000))),
-                SizedBox(height: 4),
-                Text(details,
-                    style: TextStyle(
-                        color: Color(0xff000000),
-                        fontFamily: 'Nunito Sans',
-                        fontSize: 12)),
-              ],
-            ),
-          ),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (originalPrice != null)
-                Text(
-                  originalPrice,
-                  style: TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.red,
-                      fontFamily: 'Raleway',
-                      fontSize: 15),
-                ),
-              SizedBox(
-                width: 7,
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                    border: Border.all(width: 5, color: Colors.white),
+                    borderRadius: BorderRadius.circular(100),
+                    image: DecorationImage(
+                        image: NetworkImage(imageUrl), fit: BoxFit.cover)),
               ),
-              Text(price,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Raleway',
-                      fontSize: 16)),
+              // ClipRRect(
+          
+              //   borderRadius: BorderRadius.circular(100),
+              //   child:
+              //       Image.asset(imageUrl, width: 60, height: 60, fit: BoxFit.cover),
+              // ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'Nunito Sans',
+                            color: Color(0xff000000))),
+                    SizedBox(height: 4),
+                    Text(details,
+                        style: TextStyle(
+                            color: Color(0xff000000),
+                            fontFamily: 'Nunito Sans',
+                            fontSize: 12)),
+                  ],
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (originalPrice != null)
+                    Text(
+                      originalPrice,
+                      style: TextStyle(
+                          decoration: TextDecoration.lineThrough,
+                          color: Colors.red,
+                          fontFamily: 'Raleway',
+                          fontSize: 15),
+                    ),
+                  SizedBox(
+                    width: 7,
+                  ),
+                  Text(price,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Raleway',
+                          fontSize: 16)),
+                ],
+              ),
             ],
           ),
+       Row(
+          children: [
+            Text(date),
+            SizedBox(width: 8,),
+            Text(discount,style: TextStyle(color: f),),
+          ],
+        ),
+       
         ],
       ),
     );

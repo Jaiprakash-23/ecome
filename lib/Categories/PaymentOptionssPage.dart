@@ -9,7 +9,7 @@ class _PaymentOptionssPageState extends State<PaymentOptionssPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     backgroundColor: Color(0xffE7E8EB),
+     backgroundColor: Colors.white,
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -68,15 +68,17 @@ class _PaymentOptionssPageState extends State<PaymentOptionssPage> {
                     'Total Amount',
                     style: TextStyle(
                       fontSize: 18,
+                      fontFamily: "Raleway",
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     '₹49,321',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: Color(0xff000000),
+                      fontFamily: "Raleway"
                     ),
                   ),
                 ],
@@ -183,7 +185,10 @@ class _PaymentOptionssPageState extends State<PaymentOptionssPage> {
                 ),
                 child: ListTile(
                   leading: Icon(Icons.local_offer_outlined),
-                  title: Text('Offers'),
+                  title: Text('Offers',style: TextStyle(
+                    fontFamily: "Nunito Sans",
+                    fontSize: 16
+                  ),),
                   trailing: Icon(Icons.arrow_forward_ios),
                 ),
               ),
@@ -191,45 +196,75 @@ class _PaymentOptionssPageState extends State<PaymentOptionssPage> {
             SizedBox(height: 16),
             Text(
               'Select Payment Option',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,fontFamily: "Roboto"),
             ),
             SizedBox(height: 8),
             Card(
               elevation: 3,
+              color: Colors.white,
               shape: RoundedRectangleBorder(
+                
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
-                  ListTile(
-                    leading: Icon(Icons.account_balance_wallet_outlined),
-                    title: Text('Wallet'),
-                    subtitle: Text('Available Balance - ₹2300'),
-                    trailing: Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Wallet payment logic
-                    },
+                  SizedBox(height: 16,),
+                  Container(
+                    height: 46,
+                    width: 295,
+                    decoration: BoxDecoration(
+                      color: Color(0xffF2F5FE),
+                      borderRadius: BorderRadius.circular(9)
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Image.asset("assets/images/wallet_3.png"),
+                        Text('Wallet',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,),),
+                        Text('Available Balance - ₹2300',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,color: Color(0xff4CD9B1)),),
+                        Icon(Icons.arrow_forward_ios),
+                      ],
+                    ),
                   ),
-                  Divider(height: 1),
-                  ListTile(
-                    leading: Icon(Icons.credit_card),
-                    title: Text('Debit/Credit Card, UPI Net Banking'),
-                    trailing: Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Card/UPI payment logic
-                    },
+                  SizedBox(height: 16,),
+                   Container(
+                    height: 46,
+                    width: 295,
+                    decoration: BoxDecoration(
+                      color: Color(0xffF2F5FE),
+                      borderRadius: BorderRadius.circular(9)
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Image.asset("assets/images/imagesss.png"),
+                        Text('Debit/Credit Card, UPI Net Banking',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,color: Color(0xff606060)),),
+                        //Text('Available Balance - ₹2300',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,color: Color(0xff4CD9B1)),),
+                        Icon(Icons.arrow_forward_ios),
+                      ],
+                    ),
                   ),
-                  Divider(height: 1),
-                  ListTile(
-                    leading: Icon(Icons.money_outlined),
-                    title: Text('Cash on Delivery'),
-                    trailing: Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Cash on Delivery logic
-                    },
+                 
+                 SizedBox(height: 16,),
+                   Container(
+                    height: 46,
+                    width: 295,
+                    decoration: BoxDecoration(
+                      color: Color(0xffF2F5FE),
+                      borderRadius: BorderRadius.circular(9)
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Image.asset("assets/images/imagesss.png"),
+                        Text('Cash on Delivery',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,color: Color(0xff606060)),),
+                        //Text('Available Balance - ₹2300',style: TextStyle(fontFamily: "Nunito Sans",fontSize: 12,color: Color(0xff4CD9B1)),),
+                        Icon(Icons.arrow_forward_ios),
+                      ],
+                    ),
                   ),
                 ],
-              ),
+              ), 
             ),
             SizedBox(height: 24),
             Row(

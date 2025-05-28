@@ -6,6 +6,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ecome/Bassurl.dart';
 import 'package:ecome/Categories/Categories.dart';
 import 'package:ecome/Categories/CategoriesPage.dart';
+import 'package:ecome/Dashboardd.dart';
 import 'package:ecome/HomeScreen/ProductDetailScreen.dart';
 import 'package:ecome/MyRoutes/myPagesName.dart';
 import 'package:flutter/material.dart';
@@ -333,7 +334,11 @@ class _ShopPageState extends State<ShopPage> {
                       );
                     },
                     child: Tab(
-                      icon: Icon(Icons.list_alt_rounded, size: 30,color: Colors.black,),
+                      icon: Icon(
+                        Icons.list_alt_rounded,
+                        size: 30,
+                        color: Colors.black,
+                      ),
                       text: 'All',
                     ),
                   ),
@@ -379,26 +384,36 @@ class _ShopPageState extends State<ShopPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Container(
-                      height: 80,
-                      width: 80,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          color: Color(0xff6F95F3)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset('assets/images/mobile.png'),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            'Mobile Repair',
-                            style: TextStyle(
-                                fontFamily: 'Roboto Flex', fontSize: 8),
-                          )
-                        ],
-                      )),
+                  GestureDetector(
+                    onTap: () {
+                      Get.toNamed(MyPagesName.dashbordd);
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(builder: (context) => Dashboardd()),
+                      // );
+                      // Dashboardd
+                    },
+                    child: Container(
+                        height: 80,
+                        width: 80,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: Color(0xff6F95F3)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/images/mobile.png'),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text(
+                              'Mobile Repair',
+                              style: TextStyle(
+                                  fontFamily: 'Roboto Flex', fontSize: 8),
+                            )
+                          ],
+                        )),
+                  ),
                   Container(
                       height: 80,
                       width: 80,
@@ -1429,18 +1444,18 @@ class _ShopPageState extends State<ShopPage> {
             itemCount: justforyou.length,
             itemBuilder: (context, index) {
               return GestureDetector(
-                 onTap: () {
-                        int? productId = justforyou[index]['id'];
-                        if (productId != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ProductDetailScreen(productId: productId),
-                            ),
-                          );
-                        }
-                      },
+                onTap: () {
+                  int? productId = justforyou[index]['id'];
+                  if (productId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProductDetailScreen(productId: productId),
+                      ),
+                    );
+                  }
+                },
                 child: Container(
                   margin: EdgeInsets.all(5),
                   decoration: BoxDecoration(
