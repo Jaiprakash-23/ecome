@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:ecome/Bassurl.dart';
 import 'package:ecome/Categories/ManageAddressPage.dart';
+import 'package:ecome/Categories/PaymentOptionssPage.dart';
 import 'package:ecome/Categories/VoucherPage.dart';
 import 'package:ecome/MyRoutes/myPagesName.dart';
 import 'package:flutter/gestures.dart';
@@ -25,71 +26,15 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   @override
   void initState() {
     super.initState();
-      getToken();
-     
-     getOrderSummary(token);
-    razorpay = Razorpay();
+    getToken();
 
-    // Setting up Razorpay event listeners
-    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentErrorResponse);
-    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccessResponse);
-    razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWalletSelected);
+    getOrderSummary(token);
+   
   }
 
+ 
 
-
-  void openCheckout() {
-    var options = {
-      'key': 'rzp_test_Q2EaBgbw3u8R12',
-      'amount': 1 * 1, // Amount in smallest currency unit (100 = ₹1.00)
-      'name': 'Acme Corp.',
-      'description': 'Fine T-Shirt',
-      'retry': {'enabled': true, 'max_count': 1},
-      'send_sms_hash': true,
-      'prefill': {'contact': '8888888888', 'email': 'test@razorpay.com'},
-      'external': {
-        'wallets': ['paytm'],
-      },
-    };
-
-    try {
-      razorpay.open(options);
-    } catch (e) {
-      debugPrint("Error: $e");
-    }
-  }
-
-  void handlePaymentErrorResponse(PaymentFailureResponse response) {
-    showAlertDialog(
-      context,
-      "Payment Failed",
-      "Code: ${response.code}\nDescription: ${response.message}\nMetadata: ${response.error.toString()}",
-    );
-  }
-
-  void handlePaymentSuccessResponse(PaymentSuccessResponse response) {
-    debugPrint("Payment successful. Payment ID: ${response.paymentId}");
-    // Navigate to the Welcome page directly without showing a dialog
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => Welcome()),
-    // );
-  }
-
-  void handleExternalWalletSelected(ExternalWalletResponse response) {
-    showAlertDialog(
-      context,
-      "External Wallet Selected",
-      "Wallet: ${response.walletName}",
-    );
-  }
-
-  void showAlertDialog(BuildContext context, String title, String message) {
-    Widget continueButton = ElevatedButton(
-      child: const Text("Continue"),
-      onPressed: () {},
-    );
-  }
+ 
 
   TextEditingController couponController = TextEditingController();
   String token = '';
@@ -121,13 +66,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     http.StreamedResponse response = await request.send();
 
     if (response.statusCode == 200) {
-      setState(() {
-        
-      });
+      setState(() {});
       // Read and decode the response
       String responseBody = await response.stream.bytesToString();
       try {
-        
         // Decode JSON and assign to coupons
         coupons = jsonDecode(responseBody) as List<dynamic>;
         print('Coupons: $coupons');
@@ -139,11 +81,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     }
   }
 
-
- 
   Map<dynamic, String> OrderSummary = {};
-  List<dynamic> dataOrderSummary = [];
- late String coupen = "";
+   late List<dynamic> dataOrderSummary = [];
+
+  late String coupen = "";
   Future<void> getOrderSummary(String token) async {
     print('rftyuiolkjhgfghjk $coupen');
     var headers = {
@@ -164,7 +105,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
           dataOrderSummary = decodedData['items'];
           OrderSummary =
               decodedData.map((key, value) => MapEntry(key, value.toString()));
-          print("Order Summary: $OrderSummary");
+          print("Order Summary: $dataOrderSummary");
         } else {
           print("Unexpected response format.");
         }
@@ -177,11 +118,12 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       print("Error occurred: $e");
     }
   }
-
-  
-  
-  
-  
+List<Map<String, dynamic>> get productdata => dataOrderSummary.map((item) {
+    return {
+      'productId': item['product_id'],
+      'quantity': item['quantity'],
+    };
+  }).toList();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,78 +171,78 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    color: Colors.white,
-                    child: OrderSummary['address']== "No address found" ?
-                   GestureDetector(
-                      onTap: (){
-                        Get.toNamed(MyPagesName.manageAddressPage);
-                      },
-                      child: Card(
-                        
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Container(
-                                height: 40, 
-                                //width: 90,
-                                child: Center(child: Text("Add Address"))),
-                            ),
-                      
-                      ),
-                    ):
-                    Card(
-                      //color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(29.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Deliver To",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Raleway',
-                                        fontSize: 14),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "${OrderSummary['address'] ?? ''}",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: 'Nunito Sans',
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
+                      color: Colors.white,
+                      child: OrderSummary['address'] == "No address found"
+                          ? GestureDetector(
                               onTap: () {
                                 Get.toNamed(MyPagesName.manageAddressPage);
                               },
-                              child: Container(
-                                  height: 30,
-                                  width: 30,
-                                  decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.circular(100),
-                                      color: Color(0xff004BFE)),
-                                  child:
-                                      Icon(Icons.edit, color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                 
-                  ),
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                      height: 40,
+                                      //width: 90,
+                                      child:
+                                          Center(child: Text("Add Address"))),
+                                ),
+                              ),
+                            )
+                          : Card(
+                              //color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(29.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Deliver To",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontFamily: 'Raleway',
+                                                fontSize: 14),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            "${OrderSummary['address'] ?? ''}",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontFamily: 'Nunito Sans',
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Get.toNamed(
+                                            MyPagesName.manageAddressPage);
+                                      },
+                                      child: Container(
+                                          height: 30,
+                                          width: 30,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Color(0xff004BFE)),
+                                          child: Icon(Icons.edit,
+                                              color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )),
                   SizedBox(height: 10),
                   Container(
                     width: double.infinity,
@@ -312,43 +254,59 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                           SizedBox(
                             height:
                                 300, // Set a fixed height for ListView or wrap it in a ConstrainedBox
-                            child: ListView.builder(
+                            child: 
+                            ListView.builder(
                               itemCount: dataOrderSummary.length,
                               itemBuilder: (context, index) {
+                                //  productdata = dataOrderSummary.map((dataOrderSummary) {
+                                //   return {
+                                //     'product_id': dataOrderSummary['product_id'],
+                                //     'quantity': dataOrderSummary['quantity'],
+                                //   };
+                                // }).toList();
                                 return Padding(
                                   padding: const EdgeInsets.all(13.0),
                                   child: _buildOrderItem(
-                                    imageUrl:
-                                        "$imageUrl/products/${dataOrderSummary[index]['images'][0]}",
-                                    title:
-                                        "${dataOrderSummary[index]['title'] ?? ''}",
-                                    price:
-                                        "₹ ${dataOrderSummary[index]['sales_price'] ?? ''}",
-                                    originalPrice:
-                                        "₹ ${dataOrderSummary[index]['price'] ?? ''}",
-                                    details:
-                                        "${dataOrderSummary[index]['size'][0] ?? ''} - ${dataOrderSummary[index]['color'] ?? ''}\nQty: ${dataOrderSummary[index]['quantity'] ?? ''}",
-                                        date: 'Delivered by ${dataOrderSummary[index]['delivered_by']}',
-                                     discount:dataOrderSummary[index]['delivery_charge'] ,f:dataOrderSummary[index]['delivery_charge']=="Free Delivery"?Colors.green:Colors.red
-                                  ),
+                                      imageUrl:
+                                          "$imageUrl/products/${dataOrderSummary[index]['images'][0]}",
+                                      title:
+                                          "${dataOrderSummary[index]['title'] ?? ''}",
+                                      price:
+                                          "₹ ${dataOrderSummary[index]['sales_price'] ?? ''}",
+                                      originalPrice:
+                                          "₹ ${dataOrderSummary[index]['price'] ?? ''}",
+                                      details:
+                                          "${dataOrderSummary[index]['size'] ?? ''} - ${dataOrderSummary[index]['color'] ?? ''}\nQty: ${dataOrderSummary[index]['quantity'] ?? ''}",
+                                      date:
+                                          'Delivered by ${dataOrderSummary[index]['delivered_by']}',
+                                      discount: dataOrderSummary[index]
+                                          ['delivery_charge'],
+                                      f: dataOrderSummary[index]
+                                                  ['delivery_charge'] ==
+                                              "Free Delivery"
+                                          ? Colors.green
+                                          : Colors.red),
                                 );
                               },
                             ),
+                          
+                          
                           ),
+
                           SizedBox(
                             height: 10,
                           ),
-                          Text(
-                            "    Delivered by ${OrderSummary['delivered_by']}",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontFamily: 'Nunito Sans',
-                              fontSize: 12,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
+                          // Text(
+                          //   "    Delivered by ${OrderSummary['delivered_by']}",
+                          //   style: TextStyle(
+                          //     color: Colors.black,
+                          //     fontFamily: 'Nunito Sans',
+                          //     fontSize: 12,
+                          //   ),
+                          // ),
+                          // SizedBox(
+                          //   height: 10,
+                          // ),
                         ],
                       ),
                     ),
@@ -578,14 +536,13 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                 )
                               else
                                 Expanded(
-                                  
                                   child: Container(
                                     color: Colors.transparent,
                                     child: ListTile(
-                                      
                                       leading: Icon(Icons.check_circle_outlined,
                                           color: Colors.green),
-                                      title: Text("${couponController.text} applied"),
+                                      title: Text(
+                                          "${couponController.text} applied"),
                                       subtitle: coupons[0]['discount_type'] ==
                                               'percentage'
                                           ? Text(
@@ -602,12 +559,11 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                             ),
                                       trailing: GestureDetector(
                                         onTap: () {
-                                         
-                                            coupen = couponController.text = '';
+                                          coupen = couponController.text = '';
 
-                                            isApplied = false;
-                                            errorMessage = null;
-                                        
+                                          isApplied = false;
+                                          errorMessage = null;
+
                                           getOrderSummary(token);
                                         },
                                         child: Text(
@@ -632,11 +588,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                             "Coupon code cannot be empty"; // Set error
                                       });
                                     } else {
-                                      
-                                        coupen = couponController.text;
-                                        isApplied = true;
-                                        errorMessage = null; // Clear error
-                                      
+                                      coupen = couponController.text;
+                                      isApplied = true;
+                                      errorMessage = null; // Clear error
+
                                       getOrderSummary(token);
                                     }
                                   },
@@ -667,7 +622,6 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                                     TextStyle(color: Colors.red, fontSize: 12),
                               ),
                             ),
-                         
                         ],
                       ),
                     ),
@@ -691,13 +645,12 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                               "₹ ${OrderSummary['Total_price'] ?? ''}"),
                           _buildPricingRow("Discount",
                               "- ₹ ${OrderSummary['discount_amount'] ?? ''}"),
-                               Padding(
-                                 padding: const EdgeInsets.all(0),
-                                 child:OrderSummary['coupon_code']== 0?null:
-                                  _buildPricingRow("Coupons applied",
-                                                               "₹ ${OrderSummary['coupon_code'] ?? ''}")
-                                                               
-                               ),
+                          Padding(
+                              padding: const EdgeInsets.all(0),
+                              child: OrderSummary['coupon_code'] == 0
+                                  ? null
+                                  : _buildPricingRow("Coupons applied",
+                                      "₹ ${OrderSummary['coupon_code'] ?? ''}")),
                           _buildPricingRow("Platform Fee",
                               "₹ ${OrderSummary['platform_fee'] ?? ''}"),
                           _buildPricingRow(
@@ -812,7 +765,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                       width: 10,
                     ),
                     Text(
-                      "₹${OrderSummary['total_amount']?? ''}",
+                      "₹${OrderSummary['total_amount'] ?? ''}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -821,59 +774,61 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(0),
-                  child:OrderSummary['address']== "No address found" ?
-                  ElevatedButton(
-                    onPressed: () {
-                      //Get.toNamed(MyPagesName.paymentOptionssPage);
-                      // openCheckout();
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //       builder: (context) => ManageAddressPage()),
-                      // );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      "    Proceed To Pay   ",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Nunito Sans',
-                          fontSize: 16),
-                    ),
-                  ):
-                   ElevatedButton(
-                    onPressed: () {
-                      Get.toNamed(MyPagesName.paymentOptionssPage);
-                      // openCheckout();
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //       builder: (context) => ManageAddressPage()),
-                      // );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      "    Proceed To Pay   ",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Nunito Sans',
-                          fontSize: 16),
-                    ),
-                  )
-                ),
+                    padding: const EdgeInsets.all(0),
+                    child: OrderSummary['address'] == "No address found"
+                        ? ElevatedButton(
+                            onPressed: () {
+                              //Get.toNamed(MyPagesName.paymentOptionssPage);
+                              // openCheckout();
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //       builder: (context) => ManageAddressPage()),
+                              // );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              "    Proceed To Pay   ",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Nunito Sans',
+                                  fontSize: 16),
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              String CouponController;
+                              String address_id ='${OrderSummary['address_id']}';
+                              String Amonut="${OrderSummary['total_amount']}";
+                              //Get.toNamed(MyPagesName.paymentOptionssPage,arguments: productdata);
+                              //openCheckout();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => PaymentOptionssPage(productdata:productdata, CouponController:  couponController.text,address_id: address_id,Amonut:Amonut)),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              "    Proceed To Pay   ",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Nunito Sans',
+                                  fontSize: 16),
+                            ),
+                          )),
               ],
             ),
           ),
@@ -935,7 +890,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         image: NetworkImage(imageUrl), fit: BoxFit.cover)),
               ),
               // ClipRRect(
-          
+
               //   borderRadius: BorderRadius.circular(100),
               //   child:
               //       Image.asset(imageUrl, width: 60, height: 60, fit: BoxFit.cover),
@@ -983,14 +938,18 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
               ),
             ],
           ),
-       Row(
-          children: [
-            Text(date),
-            SizedBox(width: 8,),
-            Text(discount,style: TextStyle(color: f),),
-          ],
-        ),
-       
+          Row(
+            children: [
+              Text(date),
+              SizedBox(
+                width: 8,
+              ),
+              Text(
+                discount,
+                style: TextStyle(color: f),
+              ),
+            ],
+          ),
         ],
       ),
     );

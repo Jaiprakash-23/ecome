@@ -30,6 +30,8 @@ import 'package:ecome/SplashScreen/SplashScreen.dart';
 import 'package:ecome/SplashScreen/SplashScreenn.dart';
 import 'package:ecome/SplashScreen/Welcome.dart';
 import 'package:ecome/SplashScreen/singup.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 
 class MyRoute {
@@ -48,16 +50,24 @@ class MyRoute {
     GetPage(name: MyPagesName.dashbord, page: ()=>Dashboard(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.repairRequestSummaryPage, page: ()=>RepairRequestSummaryPage()),
     GetPage(name: MyPagesName.productPage, page: ()=>ProductPage(),middlewares: [InternetCheckMiddleware()]),
-    GetPage(name: MyPagesName.reviewsPage, page: ()=>ReviewsPage(),middlewares: [InternetCheckMiddleware()]),
+    //GetPage(name: MyPagesName.reviewsPage, page: ()=>ReviewsPage(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.orderSummaryPage, page: ()=>OrderSummaryPage(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.manageAddressPage, page: ()=>ManageAddressPage(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.filterPage, page: ()=>FilterPage(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.privacyCenterPage, page: ()=>PrivacyCenterPage(),middlewares: [InternetCheckMiddleware()]),
     GetPage(name: MyPagesName.myOrdersPage, page: ()=>MyOrdersPage(),middlewares: [InternetCheckMiddleware()]),
-    GetPage(name: MyPagesName.orderDetailsPage, page: ()=>OrderDetailsPage(),middlewares: [InternetCheckMiddleware()]),
+   //GetPage(name: MyPagesName.orderDetailsPage, page: ()=>OrderDetailsPage(),middlewares: [InternetCheckMiddleware()]),
+    GetPage(
+  name: MyPagesName.orderDetailsPage,
+  page: () => OrderDetailsPage(orderesid: Get.arguments['orderid']),
+  middlewares: [InternetCheckMiddleware()],
+),
+
     GetPage(name: MyPagesName.paymentOptionsPage, page: ()=>PaymentOptionsPage(),middlewares: [InternetCheckMiddleware()]),
-    GetPage(name: MyPagesName.paymentOptionssPage, page: ()=>PaymentOptionssPage(),middlewares: [InternetCheckMiddleware()]),
+    //GetPage(name: MyPagesName.paymentOptionssPage, page: ()=>PaymentOptionssPage( productdata: productdata,),middlewares: [InternetCheckMiddleware()]),
    GetPage(name: MyPagesName.selectIssuesPage, page: ()=>SelectIssuesPage(),middlewares: [InternetCheckMiddleware()]),
      GetPage(name: MyPagesName.selectTechnicianPage, page: ()=>SelectTechnicianPage(),middlewares: [InternetCheckMiddleware()]),  
        
-        ];}
+        ];
+} 
+         

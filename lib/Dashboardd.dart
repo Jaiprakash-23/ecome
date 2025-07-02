@@ -1,4 +1,6 @@
 import 'package:ecome/MobileRepairPage/MobileRepairPage.dart';
+import 'package:ecome/MobileRepairPage/RepairHistoryPage.dart';
+import 'package:ecome/MobileRepairPage/RepairRequestDetailsPage.dart';
 import 'package:flutter/material.dart';
 
 class Dashboardd extends StatefulWidget {
@@ -16,11 +18,13 @@ class _DashboarddState extends State<Dashboardd> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
+  
   ];
 
   final List<Widget> _pages = [
     MobileRepairPage(),
+    RepairRequestDetailsPage(),
+    RepairHistoryPage(),
     
   ];
 

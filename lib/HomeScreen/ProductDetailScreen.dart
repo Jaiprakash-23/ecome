@@ -6,6 +6,7 @@ import 'package:ecome/Bassurl.dart';
 import 'package:ecome/Categories/CartPage.dart';
 import 'package:ecome/Categories/ReviewsPage.dart';
 import 'package:ecome/Dashbord.dart';
+import 'package:ecome/HomeScreen/ShoppingHomePage.dart';
 import 'package:ecome/HomeScreen/VariationsPage.dart';
 import 'package:ecome/MyRoutes/myPagesName.dart';
 import 'package:flutter/material.dart';
@@ -43,41 +44,89 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       token = (prefs.getString("token") ?? '').trim();
     });
     if (token.isNotEmpty) {
-      await fetchProductDetail(token);
+      //await fetchProductDetail(token);
+      await fetchProductData(token);
       await fetchImages(token).then((_) {
-    preloadImages(_imageList);
-  });
+        preloadImages(_imageList);
+      });
     } else {
       print('Token not available.');
     }
   }
+
   Future<void> preloadImages(List<String> urls) async {
-  for (String url in urls) {
-    await precacheImage(NetworkImage(url), context);
+    for (String url in urls) {
+      await precacheImage(NetworkImage(url), context);
+    }
   }
-}
 
-  Future<void> fetchProductDetail(String token) async {
-    var headers = {'Authorization': 'Bearer $token'};
-    var request = http.Request(
-        'GET', Uri.parse('$BasseUrl/api/product/${widget.productId}'));
+  List<Map<String, dynamic>> variations = [];
+  bool isLoading = true;
+  Map<String, Set<String>> attributeGroups = {};
+  Map<String, String> selectedAttributes = {};
 
-    request.headers.addAll(headers);
+  String buildQueryParams(Map<String, String> filters) {
+    return filters.entries.map((entry) {
+      final key = entry.key.toLowerCase(); // optional: lowercase keys
+      final value = entry.value.toLowerCase(); // handle as string
+      return "$key=$value";
+    }).join('&');
+  }
 
-    http.StreamedResponse response = await request.send();
+  var queryParams;
+  Future<void> fetchProductData(String token) async {
+    queryParams = buildQueryParams(selectedAttributes);
+    print(queryParams);
+    final attributesQuery = selectedAttributes.entries
+        .map((e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+    final url =
+        Uri.parse('$BasseUrl/api/product/${widget.productId}?$queryParams');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
-      String responseBody = await response.stream.bytesToString();
-      try {
-        setState(() {
-          data = jsonDecode(responseBody)['data'] as Map<String, dynamic>;
+      final jsonResponse = jsonDecode(response.body);
+      data = jsonResponse['data'];
+      data = jsonDecode(response.body)['data'] as Map<String, dynamic>;
+      final fetchedVariations =
+          List<Map<String, dynamic>>.from(data['variation']);
+      print('drtyuijhgf $fetchedVariations');
+      // Grouping attributes
+      Map<String, Set<String>> tempGroups = {};
+      for (var variation in fetchedVariations) {
+        final attrs = variation['attributes'] as Map<String, dynamic>;
+        attrs.forEach((key, value) {
+          if (!tempGroups.containsKey(key)) {
+            tempGroups[key] = {};
+          }
+          tempGroups[key]!.add(value.toString());
         });
-        print("Data product: $data");
-      } catch (e) {
-        print("Error decoding JSON: $e");
       }
+
+      Map<String, String> defaultSelections = {
+        for (var entry in tempGroups.entries) entry.key: entry.value.first
+      };
+
+      setState(() {
+        variations = fetchedVariations;
+        attributeGroups = tempGroups;
+        selectedAttributes =
+            selectedAttributes.isEmpty ? defaultSelections : selectedAttributes;
+        isLoading = false;
+      });
+      //selectedAttributes = defaultSelections;
     } else {
-      print('Request failed: ${response.reasonPhrase}');
+      print('Failed to fetch data: ${response.statusCode}');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -86,72 +135,58 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final List<int> _bannerItems = [1, 2, 3, 4];
   List<String> _imageList = [];
 
-
-
-  
   Future<void> fetchImages(String token) async {
-  try {
-    var headers = {'Authorization': 'Bearer $token'};
-    var request = http.Request(
-      'GET',
-      Uri.parse('$BasseUrl/api/product/image/${widget.productId}'),
-    );
-
-    request.headers.addAll(headers);
-
-    http.StreamedResponse streamedResponse = await request.send();
-
-    if (streamedResponse.statusCode == 200) {
-      final http.Response response =
-          await http.Response.fromStream(streamedResponse);
-      final Map<String, dynamic> data = json.decode(response.body);
-
-      if (data['success'] == true) {
-        setState(() {
-          _imageList = List<String>.from(data['images']);
-        });
-      }
-    } else {
-      print('Error: ${streamedResponse.reasonPhrase}');
-    }
-  } catch (e) {
-    print('An error occurred: $e');
-  }
-}
-
-  
-  Future<void> cartadd(String productId) async {
-    var headers = {
-      'Authorization': 'Bearer $token',
-    };
-
-    var url = Uri.parse('$BasseUrl/api/addtoCart?product_id=$productId');
-    var request = http.Request('POST', url);
-
-    request.headers.addAll(headers);
-
     try {
-      http.StreamedResponse response = await request.send();
+      var headers = {'Authorization': 'Bearer $token'};
+      var request = http.Request(
+        'GET',
+        Uri.parse('$BasseUrl/api/product/image/${widget.productId}'),
+      );
 
-      if (response.statusCode == 200) {
-        final responseData = await response.stream.bytesToString();
-        print('Response: $responseData');
-        print('Item added to cart successfully.');
+      request.headers.addAll(headers);
+
+      http.StreamedResponse streamedResponse = await request.send();
+
+      if (streamedResponse.statusCode == 200) {
+        final http.Response response =
+            await http.Response.fromStream(streamedResponse);
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        if (data['success'] == true) {
+          setState(() {
+            _imageList = List<String>.from(data['images']);
+          });
+        }
       } else {
-        print('Failed to add item to cart: ${response.reasonPhrase}');
+        print('Error: ${streamedResponse.reasonPhrase}');
       }
     } catch (e) {
-      print("Error during API call: $e");
+      print('An error occurred: $e');
     }
   }
 
-  final variations = [
-    {"color": "Grey", "image": "assets/grey_shoe.png"},
-    {"color": "Yellow", "image": "assets/yellow_mic.png"},
-    {"color": "White", "image": "assets/white_sneaker.png"},
-    {"color": "Green", "image": "assets/green_skirt.png"},
-    {"color": "Black", "image": "assets/black_sweater.png"},
-  ];
+  Future<void> cartadd(String productId) async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request('POST', Uri.parse('$BasseUrl/api/addtoCart'));
+    request.body = json.encode({
+      "product_id": productId,
+      "variation": selectedAttributes,
+      "quantity": quantity
+    });
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(await response.stream.bytesToString());
+    } else {
+      print(response.reasonPhrase);
+    }
+  }
+
   final List<String> justList = [
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/r/c/j/m-db-t001-dreambe-original-imahyhe9vtkgwzpe.jpeg?q=70",
     "https://rukminim2.flixcart.com/image/612/612/kvcpn680/night-dress-nighty/f/i/o/m-pcw00001409-piyali-s-creation-women-s-original-imag8ay73zazazja.jpeg?q=70",
@@ -169,8 +204,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     "https://rukminim2.flixcart.com/image/612/612/xif0q/night-suit/k/p/p/s-nd-yellowzig-bachuu-original-imagtbhvjce8grqc.jpeg?q=70"
   ];
 
-
-
   PageController _dotController = PageController();
 
   @override
@@ -179,6 +212,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
+  int selectedIndex = 0;
   void _openFullScreen(int index) {
     Navigator.push(
       context,
@@ -193,15 +227,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sizes = [
-      {"label": "S", "enabled": true},
-      {"label": "M", "enabled": true},
-      {"label": "L", "enabled": true},
-      {"label": "XL", "enabled": true},
-      {"label": "XXL", "enabled": false},
-      {"label": "XXXL", "enabled": false},
-    ];
-
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80), // Custom height
@@ -215,14 +240,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   height: 27,
                   width: 50,
                 ),
-                // Text(
-                //   "Shop",
-                //   style: TextStyle(
-                //       fontSize: 28,
-                //       fontWeight: FontWeight.bold,
-                //       color: Colors.black,
-                //       fontFamily: "raleway"),
-                // ),
                 SizedBox(width: 16),
                 Expanded(
                   child: Container(
@@ -232,6 +249,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: TextField(
+                      autofocus: false,
+                      readOnly: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ShoppingHomePage(),
+                          ),
+                        );
+                      },
                       decoration: InputDecoration(
                         isDense: true, // tighter layout
                         contentPadding: const EdgeInsets.symmetric(
@@ -239,8 +266,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         hintText: "Search",
                         prefixIcon: const SizedBox(
                             width: 5), // extra left padding for cursor
-                        suffixIcon: const Icon(Icons.camera_alt_outlined,
-                            color: Colors.blueAccent),
+                        suffixIcon:
+                            const Icon(Icons.search, color: Colors.blueAccent),
                         border: InputBorder.none,
                       ),
                     ),
@@ -251,7 +278,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(0),
@@ -267,12 +293,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${data['title'] ?? ''}',
-                          style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Raleway'),
+                        Flexible(
+                          child: Text(
+                            '${data['title'] ?? ''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Raleway'),
+                          ),
                         ),
                         Icon(
                           Icons.favorite_outline_sharp,
@@ -280,17 +310,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         )
                       ],
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      '₹ ${data['sale_price'] ?? ''}',
-                      style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'Raleway'),
-                    ),
+
                     Row(
                       children: [
+                        Text(
+                          '₹ ${data['sale_price'] ?? ''}',
+                          style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              fontFamily: 'Raleway'),
+                        ),
+                        SizedBox(
+                          width: 7,
+                        ),
                         Text(
                           '₹ ${data['price'] ?? ''}',
                           style: TextStyle(
@@ -304,29 +337,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         SizedBox(
                           width: 10,
                         ),
-                        Container(
-                          height: 18,
-                          width: 39,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(9),
-                                  topRight: Radius.circular(9),
-                                  bottomLeft: Radius.circular(9)),
-                              gradient: LinearGradient(
-                                colors: [Color(0xffFF5790), Color(0xffF81140)],
-                              )),
-                          child: Center(
-                              child: Text(
-                            '-${data['discount_offer'] ?? ''}%',
-                            style: TextStyle(
-                                fontFamily: 'Raleway',
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          )),
+                        Padding(
+                          padding: EdgeInsets.all(0),
+                          child: data['discount_offer'] == null
+                              ? null
+                              : Container(
+                                  height: 18,
+                                  width: 39,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(9),
+                                          topRight: Radius.circular(9),
+                                          bottomLeft: Radius.circular(9)),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xffFF5790),
+                                          Color(0xffF81140)
+                                        ],
+                                      )),
+                                  child: Center(
+                                      child: Text(
+                                    '-${data['discount_offer'] ?? ''}%',
+                                    style: TextStyle(
+                                        fontFamily: 'Raleway',
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  )),
+                                ),
                         )
                       ],
                     ),
+
                     SizedBox(height: 8),
                     Text(
                       '${data['description'] ?? ''}',
@@ -344,114 +386,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    Container(
-                      height: 120,
-                      //color: Colors.amber,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: variations.length,
-                        separatorBuilder: (context, index) =>
-                            SizedBox(width: 16),
-                        itemBuilder: (context, index) {
-                          final item = variations[index];
-                          return Column(
-                            children: [
-                              Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  Container(
-                                    width: 70,
-                                    height: 70,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.white, width: 5),
-                                      borderRadius: BorderRadius.circular(100),
-                                      image: DecorationImage(
-                                        image: AssetImage(
-                                            ''),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                   
-                                  ),
-                                 
-                                  if (index ==
-                                      1) 
-                                    Positioned(
-                                      top: 2,
-                                      right: 4,
-                                      child: CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: Colors.black,
-                                        child: Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              //SizedBox(height: 8),
-                              Text(
-                                item['color']!,
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    Text('Size',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Raleway',
-                            fontSize: 17)),
-                    SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: sizes.map((size) {
-                        final isSelected = selectedSize == size["label"];
-                        final isEnabled =
-                            size["enabled"] == true; // Ensures it's a boolean
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: GestureDetector(
-                            onTap: isEnabled
-                                ? () {
-                                    setState(() {
-                                      selectedSize = '${size["label"]!}';
-                                    });
-                                  }
-                                : null,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.blue.shade50
-                                    : isEnabled
-                                        ? Colors.white
-                                        : Colors.blue.shade100,
-                                border: isSelected
-                                    ? Border.all(
-                                        color: Colors.black, width: 1.5)
-                                    : null,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${size["label"]!}',
-                                style: TextStyle(
-                                  color: isEnabled ? Colors.black : Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                    buildGroupedAttributes(),
+                    
                     SizedBox(height: 26),
                     Divider(height: 0),
                     SizedBox(height: 8),
@@ -473,11 +409,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 setState(() {
                                   quantity--;
                                 });
-                                //  quantity > 1
-                                // ? () {
-
-                                //   }
-                                // : null;
                               },
                               child: Container(
                                 height: 37,
@@ -491,16 +422,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             SizedBox(
                               width: 8,
                             ),
-                            // IconButton(
-                            //   onPressed: quantity > 1
-                            //       ? () {
-                            //           setState(() {
-                            //             quantity--;
-                            //           });
-                            //         }
-                            //       : null,
-                            //   icon: Icon(Icons.remove),
-                            // ),
                             Container(
                               height: 31,
                               width: 33,
@@ -535,14 +456,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             SizedBox(
                               width: 8,
                             ),
-                            // IconButton(
-                            //   onPressed: () {
-                            //     setState(() {
-                            //       quantity++;
-                            //     });
-                            //   },
-                            //   icon: Icon(Icons.add),
-                            // ),
                           ],
                         ),
                       ],
@@ -576,9 +489,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      //onNavigateToTab(3);
-                                      //widget.onNavigateToTab(3);
-                                      //Get.toNamed(MyPagesName.cart);
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -753,8 +663,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
-                          backgroundImage:
-                              AssetImage(''),
+                          backgroundImage: AssetImage(''),
                           radius: 30,
                           backgroundColor: Colors.grey[200]),
                       title: Text(
@@ -784,7 +693,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ReviewsPage()),
+                          MaterialPageRoute(
+                              builder: (_) => ReviewsPage(widget.productId)),
                         );
                         //Get.toNamed(MyPagesName.reviewsPage);
                       },
@@ -1002,7 +912,120 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
       ),
-      
+    );
+  }
+
+  Widget buildGroupedAttributes() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: attributeGroups.entries.map((entry) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${entry.key}'.toUpperCase(),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: entry.value.map((val) {
+                  final isSelected = selectedAttributes[entry.key] == val;
+
+                  if (entry.key.toLowerCase() == 'color') {
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedAttributes[entry.key] = val;
+                        });
+                        fetchProductData(token);
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: getColorFromName(val),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.red
+                                        : Colors.black12,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                Positioned(
+                                  top: 2,
+                                  right: 4,
+                                  child: CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: Colors.black,
+                                    child: Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              // Positioned(
+                              //   top: -1,
+                              //   right: -5,
+                              //   child: Icon(Icons.check_circle, size: 16, color: Colors.black),
+                              // ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            val,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected ? Colors.red : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedAttributes[entry.key] = val;
+                        });
+                        fetchProductData(token);
+                      },
+                      child: Chip(
+                        label: Text(
+                          val,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        backgroundColor:
+                            isSelected ? Colors.red : Colors.grey[200],
+                      ),
+                    );
+                  }
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -1031,10 +1054,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                      image: CachedNetworkImageProvider(imageUrl),
+                        image: CachedNetworkImageProvider(imageUrl),
                         //"https://rukminim2.flixcart.com/image/612/612/xif0q/night-dress-nighty/f/o/6/free-fk-mix-kf-r-05-capasino-original-imah2dfn8mnsffv6.jpeg?q=70"),
-                      fit: BoxFit.cover,
-                    ),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 );
@@ -1071,10 +1094,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-
- 
 }
-
 
 class FullScreenGallery extends StatefulWidget {
   final List<String> imageList;
@@ -1122,7 +1142,8 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
             },
             builder: (context, index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: CachedNetworkImageProvider(widget.imageList[index]),
+                imageProvider:
+                    CachedNetworkImageProvider(widget.imageList[index]),
                 minScale: PhotoViewComputedScale.contained,
                 maxScale: PhotoViewComputedScale.covered * 2,
                 heroAttributes: PhotoViewHeroAttributes(
@@ -1182,33 +1203,36 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
   }
 }
 
-// class FullScreenGallery extends StatelessWidget {
-//   final List<String> imageList;
-//   final int initialIndex;
+Color getColorFromName(String name) {
+  switch (name.toLowerCase()) {
+    case 'red':
+      return Colors.red;
+    case 'blue':
+      return Colors.blue;
+    case 'green':
+      return Colors.green;
+    case 'black':
+      return Colors.black;
+    case 'white':
+      return Colors.white;
+    case 'yellow':
+      return Colors.yellow;
+    case 'orange':
+      return Colors.orange;
+    case 'pink':
+      return Colors.pink;
+    case 'purple':
+      return Colors.purple;
+    case 'grey':
+      return Colors.grey;
+    default:
+      return Colors.grey[400]!;
+  }
+}
 
-//   const FullScreenGallery({
-//     required this.imageList,
-//     required this.initialIndex,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.white,
-//       body: PhotoViewGallery.builder(
-//         itemCount: imageList.length,
-//         pageController: PageController(initialPage: initialIndex),
-//         builder: (context, index) {
-//           return PhotoViewGalleryPageOptions(
-//             imageProvider: AssetImage(imageList[index]),
-//             minScale: PhotoViewComputedScale.contained,
-//             maxScale: PhotoViewComputedScale.covered * 2,
-//             heroAttributes: PhotoViewHeroAttributes(tag: imageList[index]),
-//           );
-//         },
-//         scrollPhysics: BouncingScrollPhysics(),
-//         backgroundDecoration: BoxDecoration(color: Colors.white),
-//       ),
-//     );
-//   }
-// }
+extension StringExtension on String {
+  String capitalize() {
+    if (this.isEmpty) return this;
+    return this[0].toUpperCase() + substring(1);
+  }
+}

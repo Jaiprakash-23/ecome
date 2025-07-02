@@ -1,8 +1,73 @@
+import 'dart:convert';
+
+import 'package:ecome/Bassurl.dart';
+import 'package:ecome/Categories/Function.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+class ReviewsPage extends StatefulWidget {
+  final int productId; // The ID to be passed
+
+  ReviewsPage(this.productId, {Key? key}) : super(key: key);
 
 
-class ReviewsPage extends StatelessWidget {
-  const ReviewsPage({Key? key}) : super(key: key);
+  @override
+  State<ReviewsPage> createState() => _ReviewsPageState();
+}
+
+class _ReviewsPageState extends State<ReviewsPage> {
+  String token = '';
+  List<dynamic> ratings = [];
+
+  Future<void> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token = (prefs.getString("token") ?? '').trim();
+
+    if (token.isNotEmpty) {
+      await fetchRatings(token);
+    } else {
+      print('Token not available.');
+    }
+  }
+
+  Future<void> fetchRatings(String token) async {
+    try {
+      var headers = {
+        'Authorization': 'Bearer $token'
+      };
+
+      var url = Uri.parse('$BasseUrl/api/all/reviews/${widget.productId}');
+      var request = http.Request('GET', url);
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        String responseBody = await response.stream.bytesToString();
+        var decodedData = jsonDecode(responseBody);
+
+        if (decodedData is List) {
+          setState(() {
+            ratings = decodedData;
+          });
+          print('Fetched ratings: $ratings');
+        } else {
+          print('Unexpected response format.');
+        }
+      } else {
+        print('Failed to fetch ratings: ${response.reasonPhrase}');
+      }
+    } catch (error) {
+      print('Error fetching ratings: $error');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getToken();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +90,14 @@ class ReviewsPage extends StatelessWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: 4, // Number of reviews to display
+        itemCount: ratings.length, // Number of reviews to display
         itemBuilder: (context, index) {
           return _buildReviewItem(
-            userName: 'Veronika',
-            userImageUrl: 'assets/images/detailpage.png',
+            userName: capitalizeFirstLetter('${ratings[index]['reviewer_name']}'),
+            userImageUrl: '${ratings[index]['profile_image']}',
             reviewText:
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.',
-            rating: 5,
+                '${ratings[index]['review_text']}',
+            rating: int.tryParse('${ratings[index]['rating']}') ?? 0,
           );
         },
       ),
@@ -52,8 +117,9 @@ class ReviewsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
+            backgroundColor: Colors.white,
             radius: 24,
-            backgroundImage: AssetImage(userImageUrl),
+            backgroundImage: NetworkImage(userImageUrl),
           ),
           const SizedBox(width: 16),
           Expanded(

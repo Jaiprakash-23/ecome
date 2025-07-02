@@ -1,365 +1,301 @@
+
+import 'dart:convert';
+import 'package:ecome/Bassurl.dart';
+import 'package:ecome/Categories/Categories.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FilterPage extends StatefulWidget {
+  FilterPage({Key? key}) : super(key: key);
+
   @override
-  State<FilterPage> createState() => _FilterPageState();
+  _FilterPageState createState() => _FilterPageState();
 }
 
 class _FilterPageState extends State<FilterPage> {
-  final List<Map<String, dynamic>> categories = [
-    {'label': 'Dresses', 'image': 'assets/dresses.png', 'selected': true},
-    {'label': 'Pants', 'image': 'assets/pants.png', 'selected': true},
-    {'label': 'Skirts', 'image': 'assets/skirts.png', 'selected': false},
-    {'label': 'Shorts', 'image': 'assets/shorts.png', 'selected': false},
-    {'label': 'Jackets', 'image': 'assets/jackets.png', 'selected': false},
-  ];
-  String selectedCategory = 'Clothes';
-  String selectedSize = 'M';
-  
-  final List<Color> colors = [
-    Colors.white,
-    Colors.black,
-    Colors.blue,
-    Colors.red,
-    Colors.teal,
-    Colors.amber,
-    Colors.purple,
-  ];
- String selectedOption = 'Popular';
+  late int productId;
+  RangeValues _currentRangeValues = const RangeValues(0, 600);
+  double sliderMin = 0;
+  double sliderMax = 600;
 
-  void _onOptionSelected(String option) {
-    setState(() {
-      selectedOption = option;
-    });
+  Map<String, dynamic> variations = {};
+  Map<String, dynamic> price_range = {};
+  Map<String, List<String>> selectedValues = {};
+  String selectedCategory = '';
+  String token = '';
+
+  @override
+  void initState() {
+    super.initState();
+    productId = Get.arguments?['productId'] ?? 0;
+    getToken();
   }
 
-  int selectedColorIndex = 0;
-  RangeValues _currentRangeValues = const RangeValues(40, 80);
+  Future<void> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token = (prefs.getString("token") ?? '').trim();
+
+    if (token.isNotEmpty) {
+      await fetchFilters(token);
+    } else {
+      print('Token not available.');
+    }
+  }
+
+  Future<void> fetchFilters(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$BasseUrl/api/page/filter/$productId"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          variations = data['variations'] ?? {};
+          price_range = data['price_range'] ?? {};
+
+          double min = double.tryParse(price_range["min_price"].toString()) ?? 0;
+          double max = double.tryParse(price_range["max_price"].toString()) ?? 600;
+
+          if (min > max) {
+            final temp = min;
+            min = max;
+            max = temp;
+          }
+
+          _currentRangeValues = RangeValues(min, max);
+          sliderMin = min;
+          sliderMax = max;
+
+          selectedCategory = variations.keys.isNotEmpty ? variations.keys.first : '';
+        });
+      } else {
+        print('Failed to load data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching filters: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Filter',style: TextStyle(fontFamily: 'Raleway',fontSize: 28,fontWeight: FontWeight.bold),),
+        title: const Text('Filters'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.close),
+          TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              setState(() {
+                selectedValues.clear();
+                _currentRangeValues = RangeValues(sliderMin, sliderMax);
+              });
             },
+            child: const Text(
+              'Clear All',
+              style: TextStyle(color: Colors.blue),
+            ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Category Selection
-
-            SizedBox(height: 8),
-            SizedBox(
-              height: 110, // Constraining ListView height
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage: AssetImage(category['image']),
-                            ),
-                            if (category['selected'])
-                              CircleAvatar(
-                                radius: 12,
-                                backgroundColor: Colors.black,
-                                child: Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          category['label'],
-                          style: TextStyle(fontSize: 13,fontFamily: 'Raleway'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Size Selection
-            Padding(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: variations.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Row(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  color: const Color(0xffF3F3F3),
+                  child: ListView(
                     children: [
-                      Text(
-                        ' Size',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold,fontFamily: 'Raleway'),
-                      ),
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ChoiceChip(
-                            label: Text('Clothes',style: TextStyle(fontFamily: 'Raleway',fontSize: 13,fontWeight: FontWeight.normal),),
-                            selected: selectedCategory == 'Clothes',
-                            selectedColor: Color(0xffE5EBFC),
-                            onSelected: (selected) {
-                              setState(() {
-                                selectedCategory = 'Clothes';
-                              });
-                            },
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedCategory = "Price";
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.all(1),
+                          height: 40,
+                          color: selectedCategory == "Price"
+                              ? const Color(0xffFFFFFF)
+                              : const Color(0xffF3F3F3),
+                          child: Center(
+                            child: Text(
+                              "Price",
+                              style: TextStyle(
+                                color: selectedCategory == "Price"
+                                    ? Colors.black
+                                    : Colors.black,
+                              ),
+                            ),
                           ),
-                          SizedBox(width: 8),
-                          ChoiceChip(
-                            label: Text('Shoes',style: TextStyle(fontFamily: 'Raleway',fontSize: 14,fontWeight: FontWeight.normal)),
-                            selected: selectedCategory == 'Shoes',
-                            selectedColor: Color(0xffFFFFFF),
-                            onSelected: (selected) {
-                              setState(() {
-                                selectedCategory = 'Shoes';
-                              });
-                            },
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
-                  Container(
-                    height: 25,
-                    decoration: BoxDecoration(
-                      color: Color(0xffF4F6FE),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: ['XS', 'S', 'M', 'L', 'XL', '2XL'].map((size) {
+                      ...variations.keys.map((key) {
                         return GestureDetector(
                           onTap: () {
                             setState(() {
-                              selectedSize = size;
+                              selectedCategory = key;
                             });
                           },
-                          child: CircleAvatar(
-                            backgroundColor: selectedSize == size
-                                ? Color(0xffFFFFFF)
-                                : Color(0xffF4F6FE),
-                            radius: 15,
-                            child: Text(
-                              size,
-                              style: TextStyle(
-                                color: selectedSize == size
-                                    ? Colors.black
-                                    : Color(0xffAAC3FF),
-                                fontWeight: FontWeight.bold,
+                          child: Container(
+                            margin: const EdgeInsets.all(1),
+                            height: 40,
+                            color: selectedCategory == key
+                                ? const Color(0xffFFFFFF)
+                                : const Color(0xffF3F3F3),
+                            child: Center(
+                              child: Text(
+                                key[0].toUpperCase() + key.substring(1),
+                                style: TextStyle(
+                                  color: selectedCategory == key
+                                      ? Colors.black
+                                      : Colors.black,
+                                ),
                               ),
                             ),
                           ),
                         );
                       }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Color Selection
-            Padding(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Color",
-                    style: TextStyle(fontSize: 20,fontFamily: 'Raleway', fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(colors.length, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedColorIndex = index;
-                          });
-                        },
-                        child: Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: colors[index],
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: selectedColorIndex == index
-                                      ? Colors.black
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            if (selectedColorIndex == index)
-                              Positioned(
-                                top: 0,
-                                right: 4,
-                                child: Container(
-                                  height: 20,
-                                  width: 20,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(100),
-                                      color: Colors.black),
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Price Range
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Price',
-                  style: TextStyle(fontSize: 20,fontFamily: 'Raleway', fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    Text('\$10',style: TextStyle(fontFamily: 'Raleway',fontSize: 19,fontWeight: FontWeight.normal),),
-                    Text(' - ',style: TextStyle(fontFamily: 'Raleway',fontSize: 19,fontWeight: FontWeight.normal),),
-                    Text('\$150',style: TextStyle(fontFamily: 'Raleway',fontSize: 19,fontWeight: FontWeight.normal),),
-                  ],
-                )
-              ],
-            ),
-            RangeSlider(
-              activeColor:Color(0xff004CFF),
-             
-              values: _currentRangeValues,
-              max: 100,
-              divisions: 5,
-              labels: RangeLabels(
-                _currentRangeValues.start.round().toString(),
-                _currentRangeValues.end.round().toString(),
-              ),
-              onChanged: (RangeValues values) {
-                setState(() {
-                  _currentRangeValues = values;
-                });
-              },
-            ),
-            SizedBox(height: 16),
-
-            Row(
-              children: [
-                Container(
-                  height: 30, 
-                  width: 162, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),color:Color(0xffE5EBFC)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('        Popular',style: TextStyle(fontFamily: 'Raleway',fontSize: 15,fontWeight: FontWeight.bold),),
-                      Container(
-                         height: 22, 
-                         width: 22, 
-                         decoration: BoxDecoration(borderRadius: BorderRadius.circular(100),color:Colors.black),
-                         child: Icon(Icons.check,color:Colors.white),
-                      )
                     ],
                   ),
                 ),
-                SizedBox(width: 10,),
-                Container(
-                  height: 30, 
-                  width: 162, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),color:Color(0xffF9F9F9)),
-                  child:  Center(child: Text('Raleway',style: TextStyle(fontFamily: 'Raleway',fontSize: 15,fontWeight: FontWeight.bold),)),
-                ),
-              ],
-            ),
-            SizedBox(height: 20,),
-            Row(
-              children: [
-                Container(
-                  height: 30, 
-                  width: 162, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),color:Color(0xffF9F9F9)),
-                  child:   Center(child: Text('Price High to Low',style: TextStyle(fontFamily: 'Raleway',fontSize: 15,fontWeight: FontWeight.bold),)),
-                ),
-                SizedBox(width: 10,),
-                Container(
-                  height: 30, 
-                  width: 162, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),color:Color(0xffF9F9F9)),
-                  child:  Center(child: Text('Price Low to High',style: TextStyle(fontFamily: 'Raleway',fontSize: 15,fontWeight: FontWeight.bold),)),
-                ),
-              ],
-            ),
-            
-           
-            Spacer(),
-
-            // Buttons
-            Row(
-              children: [
-                Container(
-                  height: 50, 
-                  width: 91, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),border: Border.all(color: Colors.black)),
-                  child: Center(child: Text('Clear',style: TextStyle(fontFamily: 'Nunito Sans',fontSize: 22),)),
-                ),
-                SizedBox(width: 8),
                 Expanded(
-                  child: Container(
-                    height: 50, 
-                    width: 236, 
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),color: Colors.black),
-                     child: Center(child: Text('Apply',style: TextStyle(fontFamily: 'Nunito Sans',fontSize: 22,color: Colors.white),)),
-                  )
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      if (selectedCategory == "Price")
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  " Price ",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: "Roboto Flex",
+                                  ),
+                                ),
+                                Text(
+                                  " ₹${_currentRangeValues.start.round()} - ₹${_currentRangeValues.end.round()}",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: "Roboto Flex",
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            RangeSlider(
+                              values: _currentRangeValues,
+                              min: sliderMin,
+                              max: sliderMax,
+                              divisions: 10,
+                              labels: RangeLabels(
+                                _currentRangeValues.start.round().toString(),
+                                _currentRangeValues.end.round().toString(),
+                              ),
+                              onChanged: (RangeValues values) {
+                                setState(() {
+                                  _currentRangeValues = values;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      else
+                        ...?variations[selectedCategory]?.map((item) {
+                          return CheckboxListTile(
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: Text(item),
+                            value: selectedValues[selectedCategory]?.contains(item) ?? false,
+                            onChanged: (isChecked) {
+                              setState(() {
+                                if (isChecked == true) {
+                                  selectedValues.putIfAbsent(selectedCategory, () => []).add(item);
+                                } else {
+                                  selectedValues[selectedCategory]?.remove(item);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                    ],
+                  ),
                 ),
               ],
+            ),
+      bottomNavigationBar: BottomAppBar(
+        height: 50,
+        color: const Color(0xffFFFFFF),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Container(
+                height: double.infinity,
+                width: MediaQuery.of(context).size.width / 3,
+                color: const Color(0xffFFFFFF),
+                child: const Center(
+                  child: Text(
+                    "CLOSE",
+                    style: TextStyle(
+                        fontFamily: "Roboto Flex",
+                        color: Color(0xff707070),
+                        fontSize: 15),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              height: 40,
+              width: 2,
+              color: Colors.black,
+            ),
+            GestureDetector(
+              onTap: () {
+                Map<String, List<String>> newSelectedValues = Map.from(selectedValues);
+                newSelectedValues["min_price"] = ["${_currentRangeValues.start.round()}"];
+                newSelectedValues["max_price"] = ["${_currentRangeValues.end.round()}"];
+              Navigator.pushReplacement(
+context,MaterialPageRoute(builder: (context) => Categories(
+   selectedValues: newSelectedValues,
+                      productId: productId,
+                      categoryName: '',
+                      showBackIcon: true,
+)),);
+                
+              },
+              child: Container(
+                height: double.infinity,
+                 width: MediaQuery.of(context).size.width / 3,
+                //width: MediaQuery.of(context).size.width * 2 / 3 - 2,
+                color: const Color(0xffFFFFFF),
+                child: const Center(
+                  child: Text(
+                    "APPLY",
+                    style: TextStyle(
+                        fontFamily: "Roboto Flex",
+                        color: Colors.blue,
+                        fontSize: 15),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-   
 }

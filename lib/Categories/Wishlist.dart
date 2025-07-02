@@ -1,71 +1,105 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class WishlistPage extends StatelessWidget {
+import 'package:ecome/Bassurl.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+class WishlistPage extends StatefulWidget {
   const WishlistPage({Key? key}) : super(key: key);
 
   @override
+  State<WishlistPage> createState() => _WishlistPageState();
+}
+
+class _WishlistPageState extends State<WishlistPage> {
+  List<dynamic> witchdata = [];
+  List<dynamic> dataproduct = [];
+  bool isLoading = true;
+  String token = '';
+
+  Future<void> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String savedToken = (prefs.getString("token") ?? '').trim();
+
+    if (savedToken.isNotEmpty) {
+      setState(() {
+        token = savedToken;
+        isLoading = true;
+      });
+      await getwitchlist(token);
+      setState(() {
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      print('Token not available.');
+    }
+  }
+
+  Future<void> getwitchlist(String token) async {
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'https://ensantehealth.com/owngears/public/api/show/wishlist'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      var responseBody = await response.stream.bytesToString();
+      var data = json.decode(responseBody);
+
+      if (data != null && data['category'] is List) {
+        setState(() {
+          witchdata = data['category'] as List<dynamic>;
+          dataproduct = data['data'] as List<dynamic>;
+        });
+        print('swertyuiohgf $dataproduct');
+      } else {
+        print('Error: "category" is not found or is not a list');
+      }
+    } else {
+      print('Error: ${response.reasonPhrase}');
+    }
+  }
+
+  Future<void> deletewitchdata(String productId) async {
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+      'POST',
+      Uri.parse('$BasseUrl/api/remove/wishlist/$productId'),
+    );
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      // Remove the deleted product locally from the list
+      setState(() {
+        dataproduct.removeWhere((item) => item['product_id'] == productId);
+      });
+
+      print(
+          "Product removed successfully: ${await response.stream.bytesToString()}");
+    } else {
+      print('Failed to delete product: ${response.reasonPhrase}');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getToken();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Mock data for wishlist items
-   final wishlistItems = [
-  {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Lorem ipsum dolor sit amet consectetur.',
-    'price': 17.00, // Explicit double
-    'size': 'M',
-    'color': 'Pink',
-  },
-  {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Another item for the wishlist.',
-    'price': 25.00, // Explicit double
-    'size': 'L',
-    'color': 'Blue',
-  },
-    {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Lorem ipsum dolor sit amet consectetur.',
-    'price': 17.00, // Explicit double
-    'size': 'M',
-    'color': 'Pink',
-  },
-  {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Another item for the wishlist.',
-    'price': 25.00, // Explicit double
-    'size': 'L',
-    'color': 'Blue',
-  },
-    {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Lorem ipsum dolor sit amet consectetur.',
-    'price': 17.00, // Explicit double
-    'size': 'M',
-    'color': 'Pink',
-  },
-  {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Another item for the wishlist.',
-    'price': 25.00, // Explicit double
-    'size': 'L',
-    'color': 'Blue',
-  },
-    {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Lorem ipsum dolor sit amet consectetur.',
-    'price': 17.00, // Explicit double
-    'size': 'M',
-    'color': 'Pink',
-  },
-  {
-    'imageUrl': 'https://rukminim2.flixcart.com/image/612/612/xif0q/shirt/n/o/w/s-c301-d-blue-dennis-lingo-original-imah3mzamwpbzzzg.jpeg?q=70',
-    'title': 'Another item for the wishlist.',
-    'price': 25.00, // Explicit double
-    'size': 'L',
-    'color': 'Blue',
-  },
-
-];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -84,48 +118,55 @@ class WishlistPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-           Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Recently viewed',
-                  style: TextStyle(fontSize: 21,fontFamily: 'Raleway', fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 21,
+                      fontFamily: 'Raleway',
+                      fontWeight: FontWeight.bold),
                 ),
                 Container(
                   height: 30,
-                  width: 30, 
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(100),color:Color(0xff004CFF)),
-                  child: Icon(Icons.arrow_forward,color: Colors.white,),
+                  width: 30,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Color(0xff004CFF)),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    color: Colors.white,
+                  ),
                 )
               ],
             ),
           ),
           _buildRecentlyViewedList(),
-          // const Padding(
-          //   padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          //   child: Text(
-          //     'Wishlist',
-          //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //   ),
-          // ),
           ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: wishlistItems.length,
+            itemCount: dataproduct.length,
             itemBuilder: (context, index) {
-              final item = wishlistItems[index];
               return _buildWishlistItem(
-               imageUrl: item['imageUrl'] as String,
-      title: item['title'] as String,
-      price: item['price'] as double,
-      size: item['color'] as String,
-      color: item['size'] as String,
+                imageUrl:
+                    "$imageUrl/products/${dataproduct[index]['product']['images'][0] ?? ''}",
+                title: "${dataproduct[index]['product']['title'] ?? ''}",
+                price:
+                    "${double.tryParse(dataproduct[index]['product']['sale_price'])?.toInt() ?? 0}",
+                size: "${dataproduct[index]['product']['color'] ?? ''}",
+                color: "${dataproduct[index]['product']['size'] ?? ''}",
                 onRemove: () {
-                  // Handle remove action
-                  print('Removed item at index $index');
+                  deletewitchdata(dataproduct[index]['product_id']);
+                  print(
+                      'Removed item with ID: ${dataproduct[index]['product_id']}');
                 },
+                sale_price:
+                    '${double.tryParse(dataproduct[index]['product']['price'])?.toInt() ?? 0}',
+                discount_offer:
+                    '${dataproduct[index]['product']['discount_offer'] ?? ''}',
               );
             },
           ),
@@ -137,9 +178,11 @@ class WishlistPage extends StatelessWidget {
   Widget _buildWishlistItem({
     required String imageUrl,
     required String title,
-    required double price,
+    required String price,
     required String size,
     required String color,
+    required String sale_price,
+    required String discount_offer,
     required VoidCallback onRemove,
   }) {
     return Padding(
@@ -184,8 +227,60 @@ class WishlistPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontFamily: 'Nunito Sans')),
-                Text('\$$price', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Raleway')),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 12, fontFamily: 'Nunito Sans')),
+                Row(
+                  children: [
+                    Text('₹ $price',
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: "Raleway",
+                            fontSize: 15)),
+                    SizedBox(
+                      width: 5,
+                    ),
+                    Text(
+                      '₹ $sale_price',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                        fontFamily: 'Raleway',
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(0),
+                      child: Container(
+                        height: 18,
+                        width: 39,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(9),
+                                topRight: Radius.circular(9),
+                                bottomLeft: Radius.circular(9)),
+                            gradient: LinearGradient(
+                              colors: [Color(0xffFF5790), Color(0xffF81140)],
+                            )),
+                        child: Center(
+                            child: Text(
+                          '-$discount_offer%',
+                          style: TextStyle(
+                              fontFamily: 'Raleway',
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        )),
+                      ),
+                    )
+                  ],
+                ),
+
+                // Text('₹ $price', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Raleway')),
                 Row(
                   children: [
                     Container(
@@ -196,7 +291,11 @@ class WishlistPage extends StatelessWidget {
                         color: const Color(0xffE5EBFC),
                       ),
                       child: Center(
-                          child: Text('$size', style: const TextStyle(color: Color(0xff000000), fontFamily: 'Raleway', fontSize: 14))),
+                          child: Text('$size',
+                              style: const TextStyle(
+                                  color: Color(0xff000000),
+                                  fontFamily: 'Raleway',
+                                  fontSize: 14))),
                     ),
                     const SizedBox(width: 9),
                     Container(
@@ -207,7 +306,11 @@ class WishlistPage extends StatelessWidget {
                         color: const Color(0xffE5EBFC),
                       ),
                       child: Center(
-                          child: Text('$color', style: const TextStyle(color: Color(0xff000000), fontFamily: 'Raleway', fontSize: 14))),
+                          child: Text('$color',
+                              style: const TextStyle(
+                                  color: Color(0xff000000),
+                                  fontFamily: 'Raleway',
+                                  fontSize: 14))),
                     ),
                   ],
                 ),
@@ -240,12 +343,13 @@ class WishlistPage extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        itemCount: 6,
+        itemCount: witchdata.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           return CircleAvatar(
             radius: 36,
-            backgroundImage: NetworkImage('https://via.placeholder.com/100'),
+            backgroundImage:
+                NetworkImage('$imageUrl${witchdata[index]['image']}'),
           );
         },
       ),

@@ -54,7 +54,7 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string) {
   if (target_length == 0 || target_length > utf8_string.max_size()) {
     return utf8_string;
   }
-  utf8_string.resize(target_length);
+  utf8_string.resize(targetlength);
   int converted_length = ::WideCharToMultiByte(
       CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string,
       input_length, utf8_string.data(), target_length, nullptr, nullptr);

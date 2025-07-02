@@ -8,6 +8,7 @@ import 'package:ecome/Categories/Categories.dart';
 import 'package:ecome/Categories/CategoriesPage.dart';
 import 'package:ecome/Dashboardd.dart';
 import 'package:ecome/HomeScreen/ProductDetailScreen.dart';
+import 'package:ecome/HomeScreen/ShoppingHomePage.dart';
 import 'package:ecome/MyRoutes/myPagesName.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -15,7 +16,7 @@ import 'package:get/get_navigation/get_navigation.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_player/video_player.dart';
+// import 'package:video_player/video_player.dart';
 
 class ShopPage extends StatefulWidget {
   // final Function(int) onNavigateToTab;
@@ -164,7 +165,7 @@ class _ShopPageState extends State<ShopPage> {
   //   super.initState();
   //   _startTimer();
   // }
-  late VideoPlayerController _controller;
+  //late VideoPlayerController _controller;
 
   @override
   void initState() {
@@ -175,16 +176,16 @@ class _ShopPageState extends State<ShopPage> {
     _startTimer();
 
     // Initialize video controller with a network video URL
-    _controller = VideoPlayerController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-    )
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.pause();
-      })
-      ..setLooping(true);
+    // _controller = VideoPlayerController.network(
+    //   'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    // )
+    // ..initialize().then((_) {
+    //   setState(() {});
+    //   _controller.pause();
+    // })
+    // ..setLooping(true);
 
-    _initializeControllers();
+    //_initializeControllers();
   }
 
   // @override
@@ -193,15 +194,15 @@ class _ShopPageState extends State<ShopPage> {
   //   super.dispose();
   // }
 
-  void _togglePlayPause() {
-    setState(() {
-      if (_controller.value.isPlaying) {
-        _controller.pause();
-      } else {
-        _controller.play();
-      }
-    });
-  }
+  // void _togglePlayPause() {
+  //   setState(() {
+  //     if (_controller.value.isPlaying) {
+  //       _controller.pause();
+  //     } else {
+  //       _controller.play();
+  //     }
+  //   });
+  // }
 
   void _startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -226,15 +227,15 @@ class _ShopPageState extends State<ShopPage> {
     });
   }
 
-  @override
-  void dispose() {
-    _timer.cancel();
-    _controller.dispose();
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _timer.cancel();
+  //   _controller.dispose();
+  //   for (var controller in _controllers) {
+  //     controller.dispose();
+  //   }
+  //   super.dispose();
+  // }
 
   int _selectedIndex = 0;
 
@@ -278,14 +279,29 @@ class _ShopPageState extends State<ShopPage> {
                         borderRadius: BorderRadius.circular(25),
                       ),
                       child: TextField(
+                        autofocus: false,
+                        readOnly: true, 
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ShoppingHomePage(),
+                            ),
+                          );
+                        },
                         decoration: InputDecoration(
                           isDense: true, // tighter layout
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 10), // cursor padding
                           hintText: "Search",
-                          prefixIcon: const SizedBox(
-                              width: 5), // extra left padding for cursor
-                          suffixIcon: const Icon(Icons.camera_alt_outlined,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(
+                                left: 5), // Extra left padding for cursor
+                            // child: Icon(Icons.search,
+                            //     color:
+                            //         Colors.grey), // Replace with a search icon
+                          ),
+                          suffixIcon: const Icon(Icons.search,
                               color: Colors.blueAccent),
                           border: InputBorder.none,
                         ),
@@ -353,7 +369,7 @@ class _ShopPageState extends State<ShopPage> {
                           MaterialPageRoute(
                             builder: (context) => Categories(
                               productId: productid,
-                              categoryName: categoryName,
+                              categoryName: categoryName, selectedValues: {},
                             ),
                           ),
                         );
@@ -536,7 +552,7 @@ class _ShopPageState extends State<ShopPage> {
                               MaterialPageRoute(
                                   builder: (_) => Categories(
                                         productId: productid,
-                                        categoryName: categrayname,
+                                        categoryName: categrayname, selectedValues: {},
                                       )),
                             );
                             //Get.toNamed(MyPagesName.categories);
@@ -603,21 +619,21 @@ class _ShopPageState extends State<ShopPage> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     SizedBox(height: 5),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[100],
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        '${categories[index]['products_count']}',
-                                        style: TextStyle(
-                                            fontFamily: "Roboto Flex",
-                                            fontSize: 12,
-                                            color: Colors.black),
-                                      ),
-                                    ),
+                                    // Container(
+                                    //   padding: EdgeInsets.symmetric(
+                                    //       horizontal: 10, vertical: 6),
+                                    //   decoration: BoxDecoration(
+                                    //     color: Colors.blue[100],
+                                    //     borderRadius: BorderRadius.circular(20),
+                                    //   ),
+                                    //   child: Text(
+                                    //     '${categories[index]['products_count']}',
+                                    //     style: TextStyle(
+                                    //         fontFamily: "Roboto Flex",
+                                    //         fontSize: 12,
+                                    //         color: Colors.black),
+                                    //   ),
+                                    // ),
                                   ],
                                 )
                               ],
@@ -628,26 +644,26 @@ class _ShopPageState extends State<ShopPage> {
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "ARTICALE REIMAGINED",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                          color: Colors.black,
-                          fontFamily: 'Roboto Flex'),
-                      textAlign: TextAlign.center,
-                    ),
-                    //const SizedBox(height: 20),
-                    _buildVideoCard(_controller),
-                  ],
-                ),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.all(16.0),
+              //   child: Column(
+              //     crossAxisAlignment: CrossAxisAlignment.center,
+              //     children: [
+              //       const Text(
+              //         "ARTICALE REIMAGINED",
+              //         style: TextStyle(
+              //             fontSize: 16,
+              //             fontWeight: FontWeight.bold,
+              //             letterSpacing: 1.5,
+              //             color: Colors.black,
+              //             fontFamily: 'Roboto Flex'),
+              //         textAlign: TextAlign.center,
+              //       ),
+              //       //const SizedBox(height: 20),
+              //      // _buildVideoCard(_controller),
+              //     ],
+              //   ),
+              // ),
               _buildProductSection('Top Products', 8),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -685,7 +701,7 @@ class _ShopPageState extends State<ShopPage> {
                 ),
               ),
               Container(
-                height: 250,
+                height: 280,
                 //width: 200,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(9),
@@ -745,25 +761,105 @@ class _ShopPageState extends State<ShopPage> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  "${products[index]['title']}",
-                                  style: TextStyle(
-                                      fontSize: 14, fontFamily: "Roboto Flex"),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text(
-                                  "₹ ${products[index]['price']}",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: "Roboto Flex",
-                                    fontWeight: FontWeight.bold,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${products[index]['title']}",
+                                      style: TextStyle(
+                                          fontSize: 14, fontFamily: "Roboto Flex"),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (_favoriteIndices.contains(index)) {
+                                        productdataid = products[index]['id'];
+                                        _favoriteIndices.remove(index);
+                                        deletewitchdata(productdataid);
+                                      } else {
+                                        productdataid = products[index]['id'];
+                                        _favoriteIndices.add(index);
+                                        addwitchdata(productdataid);
+                                      }
+                                    });
+                                  },
+                                  child: Icon(
+                                    _favoriteIndices.contains(index)
+                                        ? Icons.favorite
+                                        : Icons.favorite_outline_sharp,
+                                    color: _favoriteIndices.contains(index)
+                                        ? Colors.red
+                                        : const Color(0xffE7E8EB),
+                                    size: 18,
                                   ),
                                 ),
+                                  ],
+                                ),
+                              ),
+                              // Padding(
+                              //   padding:
+                              //       const EdgeInsets.symmetric(horizontal: 8.0),
+                              //   child:
+                              // ),
+                              Row(
+                                children: [
+                                  Text(
+                                    "₹ ${double.tryParse(products[index]['price'])?.toInt() ?? 0}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: "Roboto Flex",
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(width: 5,),
+                                  Text(
+                                    '₹ ${double.tryParse(products[index]['sale_price'])?.toInt() ?? 0}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                      fontFamily: 'Raleway',
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(0),
+                                    child: products[index]['discount_offer'] ==
+                                            null
+                                        ? null
+                                        : Container(
+                                            height: 18,
+                                            width: 39,
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft: Radius.circular(9),
+                                                    topRight:
+                                                        Radius.circular(9),
+                                                    bottomLeft:
+                                                        Radius.circular(9)),
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Color(0xffFF5790),
+                                                    Color(0xffF81140)
+                                                  ],
+                                                )),
+                                            child: Center(
+                                                child: Text(
+                                              '-${products[index]['discount_offer'] ?? ''}%',
+                                              style: TextStyle(
+                                                  fontFamily: 'Raleway',
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white),
+                                            )),
+                                          ),
+                                  )
+                                ],
                               ),
                             ],
                           ),
@@ -1023,54 +1119,55 @@ class _ShopPageState extends State<ShopPage> {
     );
   }
 
-  Widget _buildVideoCard(VideoPlayerController controller) {
-    return SizedBox(
-      height: 160,
-      width: double.infinity, // Full width of the parent container
-      child: controller.value.isInitialized
-          ? Stack(
-              children: [
-                GestureDetector(
-                  onTap: _togglePlayPause, // Toggle play/pause on tap
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: VideoPlayer(controller),
-                  ),
-                ),
-                Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: Color(0xff707070),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      "Ads",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                ),
-                if (!controller.value.isPlaying)
-                  GestureDetector(
-                    onTap: _togglePlayPause, // Also handle play on icon tap
-                    child: Center(
-                      child: Icon(
-                        Icons.play_circle_outline,
-                        color: Colors.white,
-                        size: 50,
-                      ),
-                    ),
-                  ),
-              ],
-            )
-          : const Center(child: CircularProgressIndicator()),
-    );
-  }
+  // Widget _buildVideoCard(VideoPlayerController controller) {
+  //   return SizedBox(
+  //     height: 160,
+  //     width: double.infinity, // Full width of the parent container
+  //     child: controller.value.isInitialized
+  //         ? Stack(
+  //             children: [
+  //               GestureDetector(
+  //                 onTap: _togglePlayPause, // Toggle play/pause on tap
+  //                 child: ClipRRect(
+  //                   borderRadius: BorderRadius.circular(10),
+  //                   child: VideoPlayer(controller),
+  //                 ),
+  //               ),
+  //               Positioned(
+  //                 bottom: 8,
+  //                 right: 8,
+  //                 child: Container(
+  //                   padding:
+  //                       const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+  //                   decoration: BoxDecoration(
+  //                     color: Color(0xff707070),
+  //                     borderRadius: BorderRadius.circular(8),
+  //                   ),
+  //                   child: const Text(
+  //                     "Ads",
+  //                     style: TextStyle(color: Colors.white, fontSize: 12),
+  //                   ),
+  //                 ),
+  //               ),
+  //               if (!controller.value.isPlaying)
+  //                 GestureDetector(
+  //                   onTap: _togglePlayPause, // Also handle play on icon tap
+  //                   child: Center(
+  //                     child: Icon(
+  //                       Icons.play_circle_outline,
+  //                       color: Colors.white,
+  //                       size: 50,
+  //                     ),
+  //                   ),
+  //                 ),
+  //             ],
+  //           )
+  //         : const Center(child: CircularProgressIndicator()),
+  //   );
+  // }
 
-  final List<VideoPlayerController> _controllers = [];
+  // final List<VideoPlayerController> _controllers = [];
+
   final List<String> _videoUrls = [
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
@@ -1087,16 +1184,16 @@ class _ShopPageState extends State<ShopPage> {
   //   _initializeControllers();
   // }
 
-  void _initializeControllers() {
-    for (var url in _videoUrls) {
-      final controller = VideoPlayerController.network(url)
-        ..initialize().then((_) {
-          setState(() {});
-        })
-        ..setLooping(true);
-      _controllers.add(controller);
-    }
-  }
+  // void _initializeControllers() {
+  //   for (var url in _videoUrls) {
+  //     final controller = VideoPlayerController.network(url)
+  //       ..initialize().then((_) {
+  //         setState(() {});
+  //       })
+  //       ..setLooping(true);
+  //     _controllers.add(controller);
+  //   }
+  // }
 
   // @override
   // void dispose() {
@@ -1106,57 +1203,57 @@ class _ShopPageState extends State<ShopPage> {
   //   super.dispose();
   // }
 
-  void _toggleePlayPause(int index) {
-    setState(() {
-      if (_controllers[index].value.isPlaying) {
-        _controllers[index].pause();
-        _currentlyPlayingIndex = null;
-      } else {
-        // Pause all other videos
-        for (int i = 0; i < _controllers.length; i++) {
-          if (i != index) {
-            _controllers[i].pause();
-          }
-        }
-        // Play the selected video
-        _controllers[index].play();
-        _currentlyPlayingIndex = index;
-      }
-    });
-  }
+  // void _toggleePlayPause(int index) {
+  //   setState(() {
+  //     if (_controllers[index].value.isPlaying) {
+  //       _controllers[index].pause();
+  //       _currentlyPlayingIndex = null;
+  //     } else {
+  //       // Pause all other videos
+  //       for (int i = 0; i < _controllers.length; i++) {
+  //         if (i != index) {
+  //           _controllers[i].pause();
+  //         }
+  //       }
+  //       // Play the selected video
+  //       _controllers[index].play();
+  //       _currentlyPlayingIndex = index;
+  //     }
+  //   });
+  // }
 
-  Widget _builddVideoCard(int index) {
-    final controller = _controllers[index];
-    return SizedBox(
-      width: 104,
-      height: 174,
-      child: controller.value.isInitialized
-          ? Stack(
-              children: [
-                GestureDetector(
-                  onTap: () => _toggleePlayPause(index),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: VideoPlayer(controller),
-                  ),
-                ),
-                if (!controller.value.isPlaying ||
-                    _currentlyPlayingIndex != index)
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => _toggleePlayPause(index),
-                      child: Icon(
-                        Icons.play_circle_outline,
-                        color: Colors.white,
-                        size: 50,
-                      ),
-                    ),
-                  ),
-              ],
-            )
-          : const Center(child: CircularProgressIndicator()),
-    );
-  }
+  // Widget _builddVideoCard(int index) {
+  //   final controller = _controllers[index];
+  //   return SizedBox(
+  //     width: 104,
+  //     height: 174,
+  //     child: controller.value.isInitialized
+  //         ? Stack(
+  //             children: [
+  //               GestureDetector(
+  //                 onTap: () => _toggleePlayPause(index),
+  //                 child: ClipRRect(
+  //                   borderRadius: BorderRadius.circular(10),
+  //                   child: VideoPlayer(controller),
+  //                 ),
+  //               ),
+  //               if (!controller.value.isPlaying ||
+  //                   _currentlyPlayingIndex != index)
+  //                 Center(
+  //                   child: GestureDetector(
+  //                     onTap: () => _toggleePlayPause(index),
+  //                     child: Icon(
+  //                       Icons.play_circle_outline,
+  //                       color: Colors.white,
+  //                       size: 50,
+  //                     ),
+  //                   ),
+  //                 ),
+  //             ],
+  //           )
+  //         : const Center(child: CircularProgressIndicator()),
+  //   );
+  // }
 
   Widget _buildBannerSliders() {
     return Column(
@@ -1396,23 +1493,57 @@ class _ShopPageState extends State<ShopPage> {
     );
   }
 
+  final Set<int> _favoriteIndices = {};
+  late int productdataid;
+  Future<void> addwitchdata(int productId) async {
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'POST', Uri.parse('$BasseUrl/api/add/wishlist?product_id=$productId'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(" fghjuijhgfghj ${await response.stream.bytesToString()}");
+    } else {
+      print(response.reasonPhrase);
+    }
+  }
+
+  Future<void> deletewitchdata(int productId) async {
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'POST', Uri.parse('$BasseUrl/api/remove/wishlist/$productId'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(" fghjuijhgfghj ${await response.stream.bytesToString()}");
+    } else {
+      print(response.reasonPhrase);
+    }
+  }
+
   Widget _buildFlashSaleSection() {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(_controllers.length, (index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: _builddVideoCard(index),
-                );
-              }),
-            ),
-          ),
+          // SingleChildScrollView(
+          //   scrollDirection: Axis.horizontal,
+          //   child: Row(
+          //     children: List.generate(_controllers.length, (index) {
+          //       return Padding(
+          //         padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          //         child: _builddVideoCard(index),
+          //       );
+          //     }),
+          //   ),
+          // ),
           SizedBox(
             height: 10,
           ),
@@ -1490,14 +1621,102 @@ class _ShopPageState extends State<ShopPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${justforyou[index]['title'] ?? ''}',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: "Roboto Flex")),
-                            Text('₹ ${justforyou[index]['price'] ?? ''}',
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    
+                                  '${(justforyou[index]['title'] ?? '').length > 20  ? (justforyou[index]['title']?.substring(0, 20) ?? '') + '...' : justforyou[index]['title'] ?? ''}',
+                                    
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: "Nunito Sans",
+                                        fontSize: 12)),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (_favoriteIndices.contains(index)) {
+                                        productdataid = justforyou[index]['id'];
+                                        _favoriteIndices.remove(index);
+                                        deletewitchdata(productdataid);
+                                      } else {
+                                        productdataid = justforyou[index]['id'];
+                                        _favoriteIndices.add(index);
+                                        addwitchdata(productdataid);
+                                      }
+                                    });
+                                  },
+                                  child: Icon(
+                                    _favoriteIndices.contains(index)
+                                        ? Icons.favorite
+                                        : Icons.favorite_outline_sharp,
+                                    color: _favoriteIndices.contains(index)
+                                        ? Colors.red
+                                        : const Color(0xffE7E8EB),
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            
+                            Row(
+                              children: [
+                                Text('₹ ${double.tryParse(justforyou[index]['price'])?.toInt() ?? 0}',
                                 style: TextStyle(
                                     color: Colors.black,
-                                    fontFamily: "Roboto Flex")),
+                                    fontFamily: "Raleway",
+                                    fontSize: 17)),
+                                    SizedBox(
+                                  width: 5,
+                                ),
+                                Text(
+                                  '₹ ${double.tryParse(justforyou[index]['sale_price'])?.toInt() ?? 0}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                    fontFamily: 'Raleway',
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(0),
+                                  child: justforyou[index]['discount_offer'] ==
+                                          null
+                                      ? null
+                                      : Container(
+                                          height: 18,
+                                          width: 39,
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(9),
+                                                  topRight: Radius.circular(9),
+                                                  bottomLeft:
+                                                      Radius.circular(9)),
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Color(0xffFF5790),
+                                                  Color(0xffF81140)
+                                                ],
+                                              )),
+                                          child: Center(
+                                              child: Text(
+                                            '-${justforyou[index]['discount_offer'] ?? ''}%',
+                                            style: TextStyle(
+                                                fontFamily: 'Raleway',
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white),
+                                          )),
+                                        ),
+                                )
+                              ],
+                            ),
+                         
+                         
                           ],
                         ),
                       ),

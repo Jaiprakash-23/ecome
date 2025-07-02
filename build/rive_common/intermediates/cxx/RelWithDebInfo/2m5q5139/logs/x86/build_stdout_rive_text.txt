@@ -1,0 +1,2 @@
+ninja: Entering directory `/Users/ratankumarnag/.pub-cache/hosted/pub.dev/rive_common-0.4.15/android/.cxx/RelWithDebInfo/2m5q5139/x86'
+[1/1] Linking CXX shared library /Users/ratankumarnag/Downloads/ecome/build/rive_common/intermediates/cxx/RelWithDebInfo/2m5q5139/obj/x86/librive_text.so

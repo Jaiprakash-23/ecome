@@ -6,7 +6,7 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <rive_common/rive_plugin.h>
+#include <rive_common/rive_plugin>
 
 void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) rive_common_registrar =

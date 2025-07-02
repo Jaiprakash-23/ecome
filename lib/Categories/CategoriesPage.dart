@@ -227,7 +227,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                                                 productId:
                                                                     subcategoryId,
                                                                 categoryName:
-                                                                    subcategoryName,
+                                                                    subcategoryName, selectedValues: {},
                                                               )),
                                                     );
                                                   },

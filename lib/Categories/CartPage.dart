@@ -56,7 +56,7 @@ class _CartScreenState extends State<CartScreen> {
     if (savedToken.isNotEmpty) {
       setState(() {
         token = savedToken;
-        isLoading = true;
+        isLoading = false;
       });
       await Cartgetdata(token);
       setState(() {
@@ -69,35 +69,43 @@ class _CartScreenState extends State<CartScreen> {
       print('Token not available.');
     }
   }
- List<dynamic> Cartdata = [];
-  Map<dynamic,String>count={};
-  Future<void> Cartgetdata(String token) async {
-    if (token.isEmpty) {
-      print("Token is empty");
-      return;
-    }
+ 
+ 
+ 
+ 
+  List<dynamic> Cartdata = [];
+Map<String, dynamic> count = {}; 
 
-    try {
-      var headers = {'Authorization': 'Bearer $token'};
-      var response =
-          await http.get(Uri.parse('$BasseUrl/api/cart'), headers: headers);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          Cartdata = jsonDecode(response.body)['data'] ?? [];
-          count=jsonDecode(response.body);
-        });
-        print('Cartdata $count');
-      } else {
-        print("Error: ${response.statusCode} - ${response.reasonPhrase}");
-      }
-    } catch (e) {
-      print("API Call Failed: $e");
-    }
+Future<void> Cartgetdata(String token) async {
+  if (token.isEmpty) {
+    print("Token is empty");
+    return;
   }
 
+  try {
+    var headers = {'Authorization': 'Bearer $token'};
+    var response = await http.get(Uri.parse('$BasseUrl/api/cart'), headers: headers);
 
-//   }
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      
+      if (jsonResponse is Map<String, dynamic>) {
+        setState(() {
+          Cartdata = jsonResponse['data'] ?? [];
+          count = jsonResponse;
+        });
+        //print('Cartdata: $Cartdata');
+      } else {
+        print("Unexpected JSON format.");
+      }
+    } else {
+      print("Error: ${response.statusCode} - ${response.reasonPhrase}");
+    }
+  } catch (e) {
+    print("API Call Failed: $e");
+  }
+}
+
 
   @override
   void dispose() {
@@ -272,10 +280,14 @@ class _CartScreenState extends State<CartScreen> {
                                 setState(
                                     () {}); // Update the UI with the latest data
                               }, date: 'Delivered by ${Cartdata[index]['delivery_date']}',
-                              discount:Cartdata[index]['delivery_date']==0?Cartdata[index]['discount_percent']: "  Free Delivery",f:Cartdata[index]['delivery_date']==0? Colors.red:Colors.green
+                              discount:Cartdata[index]['delivery_date']==0?Cartdata[index]['discount_percent']: "  Free Delivery",f:Cartdata[index]['delivery_date']==0? Colors.red:Colors.green, 
+                              saleprice: '${Cartdata[index]['price']?? ''}', 
+                              discount_offer: Cartdata[index]['discount_type']==null?'-0%':"-${Cartdata[index]['discount_type']?? ''}%",
+                              //Cartdata[index]['discount_type']==null?null:"${Cartdata[index]['discount_type']?? ''}",
                             );
                           },
                         ),
+                        SizedBox(height: 40,),
                   Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
@@ -306,7 +318,7 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
           _buildFooter(
-            total: 188, // Calculate total
+            total: "${count['grand_total']?? 0}", // Calculate total
             onCheckout: () {},
           ),
         ],
@@ -323,10 +335,12 @@ class _CartScreenState extends State<CartScreen> {
     required String quantity,
     required String date,
     required String discount,
+    required String saleprice,
     required Color f,
     required VoidCallback onIncrease,
     required VoidCallback onDecrease,
     required VoidCallback onRemove,
+    required String discount_offer,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -384,6 +398,50 @@ class _CartScreenState extends State<CartScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             fontFamily: 'Raleway')),
+
+                            Row(
+                      children: [
+                        Text(
+                          '₹ $saleprice',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                            fontFamily: 'Raleway',
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(0),
+                          child: Container(
+                            height: 18,
+                            width: 37,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(9),
+                                    topRight: Radius.circular(9),
+                                    bottomLeft: Radius.circular(9)),
+                                gradient: LinearGradient(
+                                  colors: [Color(0xffFF5790), Color(0xffF81140)],
+                                )),
+                            child: Center(
+                                child: Text(
+                              "$discount_offer",
+                              style: TextStyle(
+                                  fontFamily: 'Raleway',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            )),
+                          ),
+                        )
+                      ],
+                    ),
+                   
+                   
                   ],
                 ),
               ),
@@ -424,6 +482,8 @@ class _CartScreenState extends State<CartScreen> {
             Text(discount,style: TextStyle(color: f),),
           ],
         ),
+SizedBox(height: 10,),
+        Divider(color: Color(0xffF5F5F5),)
         ],
       ),
     );
@@ -478,7 +538,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildFooter(
-      {required double total, required VoidCallback onCheckout}) {
+      {required String total, required VoidCallback onCheckout}) {
     return Cartdata.isEmpty
         ? Container()
         : Container(
